@@ -26,19 +26,12 @@ jobs:
         run: |
           python github_daily.py
 
-      - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-
-      - name: Copy output to gh-pages
-        run: |
-          cp github_daily.json index.json
-
-      - name: Commit and push
+      - name: Push to gh-pages
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git checkout --orphan gh-pages
+          mv github_daily.json index.json
           git add index.json
-          git commit -m "Update daily trending" || echo "No changes to commit"
-          git push
+          git commit -m "Update daily trending"
+          git push --force origin gh-pages
