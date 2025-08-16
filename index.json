@@ -1,0 +1,6 @@
+{
+  "name": "tadata-org/fastapi_mcp",
+  "url": "https://github.com/tadata-org/fastapi_mcp",
+  "desc": "Expose your FastAPI endpoints as Model Context Protocol (MCP) tools, with Auth!",
+  "date": "2025-08-16"
+}
