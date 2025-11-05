@@ -109,6 +109,8 @@ def generate_post_with_deepseek(repo_data):
 5. 正文中使用适当的 HTML 标签：<p>, <h2>, <h3>, <ul>, <li>, <code>, <strong> 等
 6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）
 7. 直接返回文章内容，不要有其他说明文字
+8. 添加一些图标和代码示例以增加可读性和趣味性
+
 
 请严格按照这个格式返回：
 文章标题

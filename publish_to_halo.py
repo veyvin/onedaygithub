@@ -19,7 +19,7 @@ def publish_to_halo(post_data):
     """发布文章到 Halo"""
     
     # Halo 配置
-    HALO_URL = "http://192.168.1.222:8090"
+    HALO_URL = "http://veyvin.com"
     HALO_TOKEN = os.getenv('HALO_TOKEN')
     
     if not HALO_TOKEN:
