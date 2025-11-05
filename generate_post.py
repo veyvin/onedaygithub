@@ -16,6 +16,21 @@ def read_repo_data():
         print("github_daily.json 文件格式错误")
         return None
 
+def format_code_blocks(content):
+    """将代码块转换为 HTML 格式"""
+    # 处理 ```language\ncode\n``` 格式的代码块
+    content = re.sub(
+        r'```(\w+)?\s*\n(.*?)\n```',
+        lambda m: f'<pre><code class="language-{m.group(1) or ""}">{m.group(2)}</code></pre>',
+        content,
+        flags=re.DOTALL
+    )
+    
+    # 处理行内代码 `code`
+    content = re.sub(r'`([^`]+)`', r'<code>\1</code>', content)
+    
+    return content
+
 def extract_title_and_content(full_content):
     """从 API 返回的内容中提取标题和正文"""
     
@@ -113,18 +128,20 @@ def generate_post_with_deepseek(repo_data):
 9. 文章标题要吸引人，包含项目名称
 10. 使用专业但易懂的技术语言
 
-🔥 代码格式化要求：
-    - 所有代码块必须使用 ``` 包裹
-    - 代码要有适当的缩进和语法高亮
-    - 不要在代码块外直接写代码
-    
-    示例正确的格式：
-    ```
-    class Example:
-        def method(self):
-            return "Hello World"
-    ```
+🔥 重要代码格式要求：
+- 所有代码块必须使用 <pre><code> 标签包裹
+- 不要使用 ``` 来包裹代码块
+- 行内代码使用 <code> 标签
+- 代码要有适当的缩进和语法高亮提示
 
+示例正确的格式：
+<pre><code class="language-python">
+class Example:
+    def method(self):
+        return "Hello World"
+</code></pre>
+
+行内代码示例：使用 <code>console.log()</code> 进行调试。
 
 请严格按照这个格式返回：
 文章标题
@@ -164,6 +181,9 @@ def generate_post_with_deepseek(repo_data):
             # 如果提取失败，使用默认标题
             if not title:
                 title = f"GitHub Trending 推荐：{repo_data['name']}"
+            
+            # 格式化代码块 - 将 ``` 转换为 HTML
+            content = format_code_blocks(content)
             
             print(f"提取的标题: {title}")
             print(f"内容预览: {content[:100]}...")
