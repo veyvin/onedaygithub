@@ -2,6 +2,7 @@ import json
 import requests
 import os
 from datetime import datetime
+import re
 
 def read_repo_data():
     """读取 GitHub Trending 数据"""
@@ -15,6 +16,61 @@ def read_repo_data():
         print("github_daily.json 文件格式错误")
         return None
 
+def extract_title_and_content(full_content):
+    """从 API 返回的内容中提取标题和正文"""
+    
+    # 如果内容以 <!DOCTYPE 开头，说明返回了完整 HTML 文档
+    if full_content.strip().startswith('<!DOCTYPE') or full_content.strip().startswith('<html'):
+        # 使用 BeautifulSoup 解析 HTML
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(full_content, 'html.parser')
+            
+            # 提取标题 - 优先找 h1，如果没有就找 title
+            title_tag = soup.find('h1')
+            if title_tag:
+                title = title_tag.get_text().strip()
+            else:
+                title_tag = soup.find('title')
+                title = title_tag.get_text().strip() if title_tag else ""
+            
+            # 提取正文 - 找 body 或者直接取所有内容
+            body_tag = soup.find('body')
+            if body_tag:
+                content = str(body_tag)
+            else:
+                content = full_content
+                
+            return title, content
+            
+        except ImportError:
+            # 如果没有 BeautifulSoup，使用正则表达式简单处理
+            print("警告: 未安装 BeautifulSoup，使用正则表达式提取内容")
+            title_match = re.search(r'<title[^>]*>(.*?)</title>', full_content, re.IGNORECASE | re.DOTALL)
+            title = title_match.group(1).strip() if title_match else ""
+            
+            body_match = re.search(r'<body[^>]*>(.*?)</body>', full_content, re.IGNORECASE | re.DOTALL)
+            content = body_match.group(1) if body_match else full_content
+            
+            return title, content
+    else:
+        # 如果不是完整 HTML，尝试提取第一行作为标题
+        lines = full_content.strip().split('\n')
+        title = ""
+        content = full_content
+        
+        # 找第一个有意义的行作为标题
+        for line in lines:
+            clean_line = line.strip()
+            if clean_line and len(clean_line) < 100:  # 标题不会太长
+                # 移除 HTML 标签
+                clean_title = re.sub(r'<[^>]+>', '', clean_line)
+                if clean_title and len(clean_title) > 5:
+                    title = clean_title
+                    break
+        
+        return title, content
+
 def generate_post_with_deepseek(repo_data):
     """使用 DeepSeek API 生成博客文章"""
     
@@ -24,13 +80,13 @@ def generate_post_with_deepseek(repo_data):
     if not DEEPSEEK_API_KEY:
         print("错误: 未找到 DEEPSEEK_API_KEY 环境变量")
         print("请在 GitHub Secrets 中设置 DEEPSEEK_API_KEY")
-        return None
+        return None, None
     
-    print(f"API Key 前几位: {DEEPSEEK_API_KEY[:10]}...")  # 调试信息
+    print(f"API Key 前几位: {DEEPSEEK_API_KEY[:10]}...")
     
     DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
     
-    # 构建提示词
+    # 构建更明确的提示词
     prompt = f"""
 请为今天的 GitHub Trending 每日推荐项目写一篇技术博客文章。
 
@@ -40,20 +96,23 @@ def generate_post_with_deepseek(repo_data):
 - 项目描述：{repo_data['desc']}
 - 推荐日期：{repo_data['date']}
 
-要求：
-1. 写一篇800-1200字的技术博客文章
-2. 文章标题要吸引人，包含项目名称
-3. 内容结构包括：
+写作要求：
+1. 文章标题请直接写在第一行，不要包含任何 HTML 标签
+2. 正文内容从第二行开始，使用 HTML 格式
+3. 文章长度800-1200字
+4. 内容结构建议：
    - 项目介绍和背景
-   - 主要功能特点
-   - 技术栈分析（根据项目名推测）
+   - 主要功能特点分析
+   - 技术架构推测
    - 应用场景和价值
    - 总结和展望
-4. 使用专业但易懂的技术语言
-5. 包含适当的 HTML 标签（如 <p>, <h2>, <h3>, <code>, <strong> 等）
-6. 不要使用 Markdown，直接使用 HTML 格式
+5. 正文中使用适当的 HTML 标签：<p>, <h2>, <h3>, <ul>, <li>, <code>, <strong> 等
+6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）
+7. 直接返回文章内容，不要有其他说明文字
 
-请直接返回文章内容，不需要额外的说明。
+请严格按照这个格式返回：
+文章标题
+<html内容>
 """
     
     headers = {
@@ -81,21 +140,34 @@ def generate_post_with_deepseek(repo_data):
         
         if response.status_code == 200:
             result = response.json()
-            return result['choices'][0]['message']['content']
+            raw_content = result['choices'][0]['message']['content']
+            
+            # 提取标题和内容
+            title, content = extract_title_and_content(raw_content)
+            
+            # 如果提取失败，使用默认标题
+            if not title:
+                title = f"GitHub Trending 推荐：{repo_data['name']}"
+            
+            print(f"提取的标题: {title}")
+            print(f"内容预览: {content[:100]}...")
+            
+            return title, content
         else:
             print(f"DeepSeek API 错误: {response.status_code}")
             print(f"错误详情: {response.text}")
-            return None
+            return None, None
             
     except requests.exceptions.RequestException as e:
         print(f"网络请求错误: {e}")
-        return None
+        return None, None
 
-def save_generated_post(content, repo_data):
+def save_generated_post(title, content, repo_data):
     """保存生成的文章"""
     post_data = {
+        "title": title,
+        "content": content,
         "repo_info": repo_data,
-        "generated_content": content,
         "generated_at": datetime.now().isoformat()
     }
     
@@ -114,13 +186,14 @@ if __name__ == "__main__":
     print(f"处理项目: {repo_data['name']}")
     
     # 生成文章
-    post_content = generate_post_with_deepseek(repo_data)
+    title, content = generate_post_with_deepseek(repo_data)
     
-    if post_content:
+    if title and content:
         # 保存生成的文章
-        save_generated_post(post_content, repo_data)
+        save_generated_post(title, content, repo_data)
         print("文章生成成功！")
-        print(f"文章长度: {len(post_content)} 字符")
+        print(f"标题: {title}")
+        print(f"文章长度: {len(content)} 字符")
     else:
         print("文章生成失败")
         exit(1)
