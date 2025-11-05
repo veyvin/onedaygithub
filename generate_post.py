@@ -110,6 +110,20 @@ def generate_post_with_deepseek(repo_data):
 6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）
 7. 直接返回文章内容，不要有其他说明文字
 8. 添加一些代码以增加可读性和趣味性，添加一些适当的图标如 📦 🚀 🛠️ 等以增加趣味性
+9. 文章标题要吸引人，包含项目名称
+10. 使用专业但易懂的技术语言
+
+🔥 代码格式化要求：
+    - 所有代码块必须使用 ``` 包裹
+    - 代码要有适当的缩进和语法高亮
+    - 不要在代码块外直接写代码
+    
+    示例正确的格式：
+    ```
+    class Example:
+        def method(self):
+            return "Hello World"
+    ```
 
 
 请严格按照这个格式返回：
@@ -131,7 +145,7 @@ def generate_post_with_deepseek(repo_data):
             }
         ],
         "temperature": 0.7,
-        "max_tokens": 4000,
+        "max_tokens": 8000,
         "stream": False
     }
     
