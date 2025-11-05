@@ -29,10 +29,14 @@ jobs:
 
       - name: Generate blog post with DeepSeek
         id: generate_post
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           python generate_post.py
 
       - name: Publish to Halo
+        env:
+          HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
         run: |
           python publish_to_halo.py
           
