@@ -1,7 +1,7 @@
 import json
 import requests
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def read_generated_post():
     """读取生成的文章"""
@@ -14,6 +14,19 @@ def read_generated_post():
     except json.JSONDecodeError:
         print("generated_post.json 文件格式错误")
         return None
+
+def get_beijing_time(date_str):
+    """将 GitHub 的 UTC 日期转换为北京时间"""
+    # GitHub 的日期是 UTC 时间，转换为北京时间 (UTC+8)
+    utc_date = datetime.strptime(date_str, "%Y-%m-%d")
+    beijing_date = utc_date + timedelta(hours=8)
+    return beijing_date
+
+def get_previous_day_beijing(date_str):
+    """获取前一天的北京时间"""
+    beijing_time = get_beijing_time(date_str)
+    previous_date = beijing_time - timedelta(days=1)
+    return previous_date
 
 def publish_to_halo(post_data):
     """发布文章到 Halo"""
@@ -30,8 +43,12 @@ def publish_to_halo(post_data):
     title = post_data['title']
     content = post_data['content']
     
-    # 生成 slug
-    slug = f"github-trending-{repo_info['date']}"
+    # 获取前一天的北京时间
+    previous_date_obj = get_previous_day_beijing(repo_info['date'])
+    previous_date_str = previous_date_obj.strftime("%Y-%m-%d")
+    
+    # 生成 slug - 使用前一天的日期
+    slug = f"github-trending-{previous_date_str}"
     
     headers = {
         "Authorization": f"Bearer {HALO_TOKEN}",
@@ -47,7 +64,8 @@ def publish_to_halo(post_data):
                 "cover": "",
                 "deleted": False,
                 "publish": True,
-                "publishTime": f"{repo_info['date']}T08:00:00Z",
+                # 修改：使用前一天的北京时间（早上8点）
+                "publishTime": f"{previous_date_str}T08:00:00+08:00",
                 "pinned": False,
                 "allowComment": True,
                 "visible": "PUBLIC",
@@ -57,7 +75,8 @@ def publish_to_halo(post_data):
                     "raw": repo_info['desc'][:150]
                 },
                 "categories": ["github-trending"],
-                "tags": ["GitHub", "Trending", "开源项目", "每日推荐"],
+                # 修改：添加指定的标签
+                "tags": ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布文章", "自动化"],
                 "htmlMetas": []
             },
             "apiVersion": "content.halo.run/v1alpha1",
@@ -84,6 +103,9 @@ def publish_to_halo(post_data):
         
         if response.status_code == 200:
             print("文章发布到 Halo 成功！")
+            print(f"GitHub 原始日期: {repo_info['date']}")
+            print(f"发布时间 (北京时间): {previous_date_str}T08:00:00+08:00")
+            print(f"文章标签: GitHub, Trending, 开源项目, 每日推荐, 自动发布文章, 自动化")
             return response.json()
         else:
             print(f"发布失败: {response.status_code}")
@@ -106,6 +128,7 @@ if __name__ == "__main__":
     
     if result:
         print("自动化流程完成！文章已发布到 Halo")
+        print(f"文章已设置为前一天发布，包含指定的自动化标签")
     else:
         print("发布失败")
         exit(1)
