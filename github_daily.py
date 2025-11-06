@@ -15,19 +15,31 @@ def load_processed_repos():
         print(f"CSV 文件不存在，将创建新文件: {CSV_FILE}")
         return processed
     
+    # 检查文件是否为空
+    if os.path.getsize(CSV_FILE) == 0:
+        print(f"CSV 文件为空，将跳过读取")
+        return processed
+    
     try:
         with open(CSV_FILE, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
+            row_count = 0
             for row in reader:
+                row_count += 1
                 # 使用 URL 作为唯一标识（更可靠）
                 repo_url = row.get('url', '').strip()
                 if repo_url:
                     processed.add(repo_url)
+            
+            if row_count == 0:
+                print(f"CSV 文件只包含表头，没有数据行")
         
         print(f"已加载 {len(processed)} 个已处理的仓库")
         return processed
     except Exception as e:
         print(f"读取 CSV 文件时出错: {e}")
+        import traceback
+        traceback.print_exc()
         return processed
 
 def save_processed_repo(repo_info):
@@ -35,12 +47,13 @@ def save_processed_repo(repo_info):
     file_exists = os.path.exists(CSV_FILE)
     
     try:
+        # 使用追加模式打开文件
         with open(CSV_FILE, 'a', encoding='utf-8', newline='') as f:
             fieldnames = ['name', 'url', 'processed_date']
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             
-            # 如果文件不存在，写入表头
-            if not file_exists:
+            # 如果文件不存在或为空，写入表头
+            if not file_exists or os.path.getsize(CSV_FILE) == 0:
                 writer.writeheader()
             
             # 写入新记录
@@ -49,10 +62,25 @@ def save_processed_repo(repo_info):
                 'url': repo_info['url'],
                 'processed_date': repo_info['date']
             })
+            # 确保数据立即写入磁盘
+            f.flush()
+            os.fsync(f.fileno())
         
-        print(f"已保存到 CSV: {repo_info['name']} ({repo_info['url']})")
+        # 验证文件是否真的写入了
+        if os.path.exists(CSV_FILE):
+            file_size = os.path.getsize(CSV_FILE)
+            print(f"已保存到 CSV: {repo_info['name']} ({repo_info['url']})")
+            print(f"CSV 文件大小: {file_size} 字节")
+            # 读取并显示文件内容用于调试
+            with open(CSV_FILE, 'r', encoding='utf-8') as f:
+                content = f.read()
+                print(f"CSV 文件内容预览:\n{content[:200]}")
+        else:
+            print(f"警告: CSV 文件不存在: {CSV_FILE}")
     except Exception as e:
         print(f"保存 CSV 文件时出错: {e}")
+        import traceback
+        traceback.print_exc()
 
 def get_trending_repos():
     """获取所有趋势仓库"""
