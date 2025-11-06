@@ -46,6 +46,10 @@ def save_processed_repo(repo_info):
     """将已处理的仓库保存到 CSV 文件"""
     file_exists = os.path.exists(CSV_FILE)
     
+    print(f"=== 保存仓库到 CSV ===")
+    print(f"文件是否存在: {file_exists}")
+    print(f"仓库信息: {repo_info}")
+    
     try:
         # 使用追加模式打开文件
         with open(CSV_FILE, 'a', encoding='utf-8', newline='') as f:
@@ -54,29 +58,34 @@ def save_processed_repo(repo_info):
             
             # 如果文件不存在或为空，写入表头
             if not file_exists or os.path.getsize(CSV_FILE) == 0:
+                print("写入 CSV 表头")
                 writer.writeheader()
             
             # 写入新记录
-            writer.writerow({
+            new_row = {
                 'name': repo_info['name'],
                 'url': repo_info['url'],
                 'processed_date': repo_info['date']
-            })
+            }
+            print(f"写入新行: {new_row}")
+            writer.writerow(new_row)
+            
             # 确保数据立即写入磁盘
             f.flush()
             os.fsync(f.fileno())
         
-        # 验证文件是否真的写入了
+        # 验证写入结果
         if os.path.exists(CSV_FILE):
             file_size = os.path.getsize(CSV_FILE)
-            print(f"已保存到 CSV: {repo_info['name']} ({repo_info['url']})")
             print(f"CSV 文件大小: {file_size} 字节")
-            # 读取并显示文件内容用于调试
+            
+            # 读取并显示最新内容
             with open(CSV_FILE, 'r', encoding='utf-8') as f:
                 content = f.read()
-                print(f"CSV 文件内容预览:\n{content[:200]}")
+                print(f"CSV 文件完整内容:\n{content}")
         else:
-            print(f"警告: CSV 文件不存在: {CSV_FILE}")
+            print(f"错误: CSV 文件不存在: {CSV_FILE}")
+            
     except Exception as e:
         print(f"保存 CSV 文件时出错: {e}")
         import traceback
