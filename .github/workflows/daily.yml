@@ -30,29 +30,51 @@ jobs:
 
       - name: Debug - Check files before running scripts
         run: |
-          echo "=== 文件状态检查 ==="
+          echo "=== 初始文件状态 ==="
           ls -la
-          echo "=== CSV 文件初始状态 ==="
           if [ -f processed_repos.csv ]; then
-            echo "CSV 文件存在"
+            echo "CSV 文件存在，内容:"
             cat processed_repos.csv
           else
-            echo "CSV 文件不存在，将创建新文件"
+            echo "CSV 文件不存在"
           fi
 
-      - name: Run GitHub trending script
+      - name: Get trending repo and update CSV
         id: get_trending
         run: |
-          echo "=== 运行 GitHub Trending 脚本 ==="
+          echo "=== 获取趋势仓库并更新 CSV ==="
           python github_daily.py
-          echo "=== 脚本执行后 CSV 状态 ==="
+          
+          echo "=== 验证 CSV 更新 ==="
           if [ -f processed_repos.csv ]; then
-            echo "CSV 文件存在，大小: $(wc -c < processed_repos.csv) 字节"
-            echo "CSV 内容:"
+            echo "CSV 文件内容:"
             cat processed_repos.csv
+            echo "CSV 文件大小: $(wc -c < processed_repos.csv) 字节"
           else
             echo "错误: CSV 文件未创建"
             exit 1
+          fi
+
+      - name: Commit CSV update immediately
+        run: |
+          echo "=== 立即提交 CSV 更新 ==="
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          
+          echo "当前分支: $(git branch --show-current)"
+          echo "文件状态:"
+          git status
+          
+          # 只添加 CSV 文件
+          git add processed_repos.csv
+          
+          if git diff --staged --quiet; then
+            echo "CSV 文件没有变化（可能已经提交）"
+          else
+            echo "提交 CSV 更新..."
+            git commit -m "Update processed repos CSV [skip ci]"
+            git push origin ${{ github.ref_name }}
+            echo "CSV 更新已提交到 ${{ github.ref_name }}"
           fi
 
       - name: Generate blog post with DeepSeek
@@ -60,36 +82,39 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
+          echo "=== 生成博客文章 ==="
           python generate_post.py
+          if [ -f generated_post.json ]; then
+            echo "文章生成成功"
+          else
+            echo "错误: 文章生成失败"
+            exit 1
+          fi
 
       - name: Publish to Halo
         env:
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
         run: |
+          echo "=== 发布到 Halo ==="
           python publish_to_halo.py
 
-      - name: Commit all changes to main branch
+      - name: Commit final changes
         run: |
-          echo "=== 提交所有更改到主分支 ==="
+          echo "=== 提交最终更改 ==="
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           
-          # 显示当前状态
-          echo "当前分支: $(git branch --show-current)"
-          echo "文件状态:"
-          git status
-          
-          # 添加所有更改的文件
+          # 添加其他可能更改的文件
           git add -A
+          git reset processed_repos.csv  # 排除已提交的 CSV 文件
           
-          # 检查是否有更改需要提交
           if git diff --staged --quiet; then
-            echo "没有需要提交的更改"
+            echo "没有其他需要提交的更改"
           else
-            echo "提交更改..."
-            git commit -m "Auto-update: GitHub trending data and processed repos [skip ci]"
+            echo "提交最终更改..."
+            git commit -m "Auto-update: Generated post and other changes [skip ci]"
             git push origin ${{ github.ref_name }}
-            echo "更改已推送到 ${{ github.ref_name }}"
+            echo "最终更改已提交到 ${{ github.ref_name }}"
           fi
 
       - name: Push to gh-pages
