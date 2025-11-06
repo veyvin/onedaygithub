@@ -44,22 +44,30 @@ jobs:
         run: |
           python publish_to_halo.py
       
-      - name: Commit processed repos CSV
+      - name: Commit processed repos CSV to main branch
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          # 确保在正确的分支上
+          git checkout ${{ github.ref_name }} || git checkout -b ${{ github.ref_name }}
           if [ -f processed_repos.csv ]; then
             git add processed_repos.csv
             if ! git diff --staged --quiet; then
               git commit -m "Update processed repos CSV [skip ci]"
-              git push origin HEAD:${{ github.ref_name }} || true
+              git push origin ${{ github.ref_name }}
+            else
+              echo "No changes to processed_repos.csv"
             fi
+          else
+            echo "processed_repos.csv file not found"
           fi
           
       - name: Push to gh-pages
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          # 先拉取最新的主分支，确保 CSV 文件已保存
+          git fetch origin ${{ github.ref_name }}:${{ github.ref_name }} || true
           git checkout --orphan gh-pages
           mv github_daily.json index.json
           git add index.json
