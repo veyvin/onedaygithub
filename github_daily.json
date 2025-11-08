@@ -1,7 +1,7 @@
 {
-  "name": "dbeaver/dbeaver",
-  "url": "https://github.com/dbeaver/dbeaver",
-  "desc": "Free universal database tool and SQL client",
-  "stars": "46,422",
+  "name": "localstack/localstack",
+  "url": "https://github.com/localstack/localstack",
+  "desc": "💻 A fully functional local AWS cloud stack. Develop and test your cloud & Serverless apps offline",
+  "stars": "62,465",
   "date": "2025-11-08"
 }
