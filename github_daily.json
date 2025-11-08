@@ -1,7 +1,7 @@
 {
-  "name": "umami-software/umami",
-  "url": "https://github.com/umami-software/umami",
-  "desc": "Umami is a modern, privacy-focused alternative to Google Analytics.",
-  "stars": "31,888",
+  "name": "lima-vm/lima",
+  "url": "https://github.com/lima-vm/lima",
+  "desc": "Linux virtual machines, with a focus on running containers",
+  "stars": "18,527",
   "date": "2025-11-08"
 }
