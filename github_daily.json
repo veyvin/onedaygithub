@@ -1,7 +1,7 @@
 {
-  "name": "localstack/localstack",
-  "url": "https://github.com/localstack/localstack",
-  "desc": "💻 A fully functional local AWS cloud stack. Develop and test your cloud & Serverless apps offline",
-  "stars": "62,465",
-  "date": "2025-11-08"
+  "name": "Shubhamsaboo/awesome-llm-apps",
+  "url": "https://github.com/Shubhamsaboo/awesome-llm-apps",
+  "desc": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.",
+  "stars": "75,786",
+  "date": "2025-11-09"
 }
