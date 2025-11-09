@@ -1,7 +1,7 @@
 {
-  "name": "Shubhamsaboo/awesome-llm-apps",
-  "url": "https://github.com/Shubhamsaboo/awesome-llm-apps",
-  "desc": "Collection of awesome LLM apps with AI Agents and RAG using OpenAI, Anthropic, Gemini and opensource models.",
-  "stars": "75,786",
+  "name": "airweave-ai/airweave",
+  "url": "https://github.com/airweave-ai/airweave",
+  "desc": "Context retrieval for AI agents across apps and databases",
+  "stars": "4,827",
   "date": "2025-11-09"
 }
