@@ -1,7 +1,7 @@
 {
-  "name": "nvm-sh/nvm",
-  "url": "https://github.com/nvm-sh/nvm",
-  "desc": "Node Version Manager - POSIX-compliant bash script to manage multiple active node.js versions",
-  "stars": "89,095",
+  "name": "traefik/traefik",
+  "url": "https://github.com/traefik/traefik",
+  "desc": "The Cloud Native Application Proxy",
+  "stars": "57,756",
   "date": "2025-11-12"
 }
