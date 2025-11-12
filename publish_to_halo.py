@@ -23,17 +23,11 @@ def get_beijing_time(date_str):
     beijing_date = utc_date + timedelta(hours=8)
     return beijing_date
 
-def get_previous_day_beijing(date_str):
-    """获取前一天的北京时间"""
-    beijing_time = get_beijing_time(date_str)
-    previous_date = beijing_time - timedelta(days=1)
-    return previous_date
-
 def generate_unique_slug(repo_name, date_str):
     """生成唯一的 slug，使用项目名称作为后缀"""
-    # 获取前一天的北京时间
-    previous_date_obj = get_previous_day_beijing(date_str)
-    previous_date_str = previous_date_obj.strftime("%Y-%m-%d")
+    # 获取当前的北京时间
+    beijing_date_obj = get_beijing_time(date_str)
+    beijing_date_str = beijing_date_obj.strftime("%Y-%m-%d")
     
     # 处理项目名称，生成安全的 slug 部分
     repo_name_slug = repo_name.replace('/', '-').replace(' ', '-').lower()
@@ -45,16 +39,16 @@ def generate_unique_slug(repo_name, date_str):
         repo_name_slug = repo_name_slug[:30]
     
     # 组合成完整的 slug
-    slug = f"github-trending-{previous_date_str}-{repo_name_slug}"
+    slug = f"github-trending-{beijing_date_str}-{repo_name_slug}"
     
     # 确保总长度不超过限制
     if len(slug) > 60:
         # 如果还是太长，进一步截断项目名称部分
-        max_repo_length = 60 - len(f"github-trending-{previous_date_str}-") - 1
+        max_repo_length = 60 - len(f"github-trending-{beijing_date_str}-") - 1
         repo_name_slug = repo_name_slug[:max_repo_length]
-        slug = f"github-trending-{previous_date_str}-{repo_name_slug}"
+        slug = f"github-trending-{beijing_date_str}-{repo_name_slug}"
     
-    return slug, previous_date_str
+    return slug, beijing_date_str
 
 def publish_to_halo(post_data):
     """发布文章到 Halo"""
@@ -91,8 +85,8 @@ def publish_to_halo(post_data):
                 "cover": "",
                 "deleted": False,
                 "publish": True,
-                # 使用前一天的北京时间（早上8点）
-                "publishTime": f"{previous_date_str}T08:00:00+08:00",
+                # 使用当前的北京时间（早上8点）
+                "publishTime": f"{beijing_date_str}T08:00:00+08:00",
                 "pinned": False,
                 "allowComment": True,
                 "visible": "PUBLIC",
@@ -133,7 +127,7 @@ def publish_to_halo(post_data):
             print(f"📝 文章标题: {title}")
             print(f"🔗 文章 slug: {slug}")
             print(f"📅 GitHub 原始日期: {repo_info['date']}")
-            print(f"🕗 发布时间 (北京时间): {previous_date_str}T08:00:00+08:00")
+            print(f"🕗 发布时间 (北京时间): {beijing_date_str}T08:00:00+08:00")
             print(f"🏷️ 文章标签: GitHub, Trending, 开源项目, 每日推荐, 自动发布文章, 自动化")
             print(f"📂 项目名称: {repo_info['name']}")
             return response.json()
@@ -170,7 +164,7 @@ if __name__ == "__main__":
     
     if result:
         print("\n🎉 自动化流程完成！文章已成功发布到 Halo")
-        print("✅ 文章已设置为前一天发布")
+        print("✅ 文章已设置为当天发布")
         print("✅ 包含指定的自动化标签")
         print("✅ 使用唯一 slug 避免重复")
     else:
