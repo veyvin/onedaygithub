@@ -86,7 +86,7 @@ def publish_to_halo(post_data):
                 "deleted": False,
                 "publish": True,
                 # 使用当前的北京时间（早上8点）
-                "publishTime": f"{beijing_date_str}T08:00:00+08:00",
+                "publishTime": f"{previous_date_str}T08:00:00+08:00",
                 "pinned": False,
                 "allowComment": True,
                 "visible": "PUBLIC",
@@ -127,7 +127,7 @@ def publish_to_halo(post_data):
             print(f"📝 文章标题: {title}")
             print(f"🔗 文章 slug: {slug}")
             print(f"📅 GitHub 原始日期: {repo_info['date']}")
-            print(f"🕗 发布时间 (北京时间): {beijing_date_str}T08:00:00+08:00")
+            print(f"🕗 发布时间 (北京时间): {previous_date_str}T08:00:00+08:00")
             print(f"🏷️ 文章标签: GitHub, Trending, 开源项目, 每日推荐, 自动发布文章, 自动化")
             print(f"📂 项目名称: {repo_info['name']}")
             return response.json()
