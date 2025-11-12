@@ -1,7 +1,7 @@
 {
-  "name": "serverless-dns/serverless-dns",
-  "url": "https://github.com/serverless-dns/serverless-dns",
-  "desc": "The RethinkDNS resolver that deploys to Cloudflare Workers, Deno Deploy, Fastly, and Fly.io",
-  "stars": "2,862",
+  "name": "yichuan-w/LEANN",
+  "url": "https://github.com/yichuan-w/LEANN",
+  "desc": "RAG on Everything with LEANN. Enjoy 97% storage savings while running a fast, accurate, and 100% private RAG application on your personal device.",
+  "stars": "4,100",
   "date": "2025-11-12"
 }
