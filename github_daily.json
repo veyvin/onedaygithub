@@ -1,7 +1,7 @@
 {
-  "name": "traefik/traefik",
-  "url": "https://github.com/traefik/traefik",
-  "desc": "The Cloud Native Application Proxy",
-  "stars": "57,756",
-  "date": "2025-11-12"
+  "name": "HKUDS/LightRAG",
+  "url": "https://github.com/HKUDS/LightRAG",
+  "desc": "[EMNLP2025] \"LightRAG: Simple and Fast Retrieval-Augmented Generation\"",
+  "stars": "22,707",
+  "date": "2025-11-13"
 }
