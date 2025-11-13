@@ -1,7 +1,7 @@
 {
-  "name": "volcengine/verl",
-  "url": "https://github.com/volcengine/verl",
-  "desc": "verl: Volcano Engine Reinforcement Learning for LLMs",
-  "stars": "15,452",
+  "name": "GibsonAI/Memori",
+  "url": "https://github.com/GibsonAI/Memori",
+  "desc": "Open-Source Memory Engine for LLMs, AI Agents & Multi-Agent Systems",
+  "stars": "2,671",
   "date": "2025-11-13"
 }
