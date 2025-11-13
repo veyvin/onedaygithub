@@ -1,7 +1,7 @@
 {
-  "name": "HKUDS/LightRAG",
-  "url": "https://github.com/HKUDS/LightRAG",
-  "desc": "[EMNLP2025] \"LightRAG: Simple and Fast Retrieval-Augmented Generation\"",
-  "stars": "22,707",
+  "name": "volcengine/verl",
+  "url": "https://github.com/volcengine/verl",
+  "desc": "verl: Volcano Engine Reinforcement Learning for LLMs",
+  "stars": "15,452",
   "date": "2025-11-13"
 }
