@@ -1,7 +1,7 @@
 {
-  "name": "microsoft/call-center-ai",
-  "url": "https://github.com/microsoft/call-center-ai",
-  "desc": "Send a phone call from AI agent, in an API call. Or, directly call the bot from the configured phone number!",
-  "stars": "2,554",
+  "name": "MustardChef/WSABuilds",
+  "url": "https://github.com/MustardChef/WSABuilds",
+  "desc": "Run Windows Subsystem For Android on your Windows 10 and Windows 11 PC using prebuilt binaries with Google Play Store (MindTheGapps) and/or Magisk or KernelSU (root solutions) built in.",
+  "stars": "12,910",
   "date": "2025-11-14"
 }
