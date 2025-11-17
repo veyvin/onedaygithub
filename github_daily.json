@@ -1,7 +1,7 @@
 {
-  "name": "milvus-io/milvus",
-  "url": "https://github.com/milvus-io/milvus",
-  "desc": "Milvus is a high-performance, cloud-native vector database built for scalable vector ANN search",
-  "stars": "39,014",
-  "date": "2025-11-16"
+  "name": "wolfpld/tracy",
+  "url": "https://github.com/wolfpld/tracy",
+  "desc": "Frame profiler",
+  "stars": "13,476",
+  "date": "2025-11-17"
 }
