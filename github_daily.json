@@ -1,7 +1,7 @@
 {
-  "name": "basecamp/fizzy",
-  "url": "https://github.com/basecamp/fizzy",
-  "desc": "Kanban as it should be. Not as it has been.",
-  "stars": "3,105",
-  "date": "2025-12-05"
+  "name": "rustfs/rustfs",
+  "url": "https://github.com/rustfs/rustfs",
+  "desc": "🚀2.3x faster than MinIO for 4KB object payloads. RustFS is an open-source, S3-compatible high-performance object storage system supporting migration and coexistence with other S3-compatible platforms such as MinIO and Ceph.",
+  "stars": "14,453",
+  "date": "2025-12-06"
 }
