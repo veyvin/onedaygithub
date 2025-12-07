@@ -1,7 +1,7 @@
 {
-  "name": "rustfs/rustfs",
-  "url": "https://github.com/rustfs/rustfs",
-  "desc": "🚀2.3x faster than MinIO for 4KB object payloads. RustFS is an open-source, S3-compatible high-performance object storage system supporting migration and coexistence with other S3-compatible platforms such as MinIO and Ceph.",
-  "stars": "14,453",
-  "date": "2025-12-06"
+  "name": "microsoft/VibeVoice",
+  "url": "https://github.com/microsoft/VibeVoice",
+  "desc": "Open-Source Frontier Voice AI",
+  "stars": "11,080",
+  "date": "2025-12-07"
 }
