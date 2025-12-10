@@ -1,7 +1,7 @@
 {
-  "name": "sinelaw/fresh",
-  "url": "https://github.com/sinelaw/fresh",
-  "desc": "Text editor for your terminal: easy, powerful and fast",
-  "stars": "1,327",
-  "date": "2025-12-09"
+  "name": "KaijuEngine/kaiju",
+  "url": "https://github.com/KaijuEngine/kaiju",
+  "desc": "General purpose 3D and 2D game engine using Go (golang) and Vulkan with built in editor",
+  "stars": "1,639",
+  "date": "2025-12-10"
 }
