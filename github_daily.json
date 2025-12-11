@@ -1,7 +1,7 @@
 {
-  "name": "KaijuEngine/kaiju",
-  "url": "https://github.com/KaijuEngine/kaiju",
-  "desc": "General purpose 3D and 2D game engine using Go (golang) and Vulkan with built in editor",
-  "stars": "1,639",
-  "date": "2025-12-10"
+  "name": "thedotmack/claude-mem",
+  "url": "https://github.com/thedotmack/claude-mem",
+  "desc": "A Claude Code plugin that automatically captures everything Claude does during your coding sessions, compresses it with AI (using Claude's agent-sdk), and injects relevant context back into future sessions.",
+  "stars": "2,784",
+  "date": "2025-12-11"
 }
