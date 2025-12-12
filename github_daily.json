@@ -1,7 +1,7 @@
 {
-  "name": "thedotmack/claude-mem",
-  "url": "https://github.com/thedotmack/claude-mem",
-  "desc": "A Claude Code plugin that automatically captures everything Claude does during your coding sessions, compresses it with AI (using Claude's agent-sdk), and injects relevant context back into future sessions.",
-  "stars": "2,784",
-  "date": "2025-12-11"
+  "name": "Tencent/WeKnora",
+  "url": "https://github.com/Tencent/WeKnora",
+  "desc": "LLM-powered framework for deep document understanding, semantic retrieval, and context-aware answers using RAG paradigm.",
+  "stars": "8,146",
+  "date": "2025-12-12"
 }
