@@ -1,7 +1,7 @@
 {
-  "name": "Tencent/WeKnora",
-  "url": "https://github.com/Tencent/WeKnora",
-  "desc": "LLM-powered framework for deep document understanding, semantic retrieval, and context-aware answers using RAG paradigm.",
-  "stars": "8,146",
-  "date": "2025-12-12"
+  "name": "block/goose",
+  "url": "https://github.com/block/goose",
+  "desc": "an open source, extensible AI agent that goes beyond code suggestions - install, execute, edit, and test with any LLM",
+  "stars": "24,066",
+  "date": "2025-12-13"
 }
