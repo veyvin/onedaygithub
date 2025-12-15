@@ -1,7 +1,7 @@
 {
-  "name": "block/goose",
-  "url": "https://github.com/block/goose",
-  "desc": "an open source, extensible AI agent that goes beyond code suggestions - install, execute, edit, and test with any LLM",
-  "stars": "24,066",
-  "date": "2025-12-13"
+  "name": "simstudioai/sim",
+  "url": "https://github.com/simstudioai/sim",
+  "desc": "Open-source platform to build and deploy AI agent workflows.",
+  "stars": "20,343",
+  "date": "2025-12-15"
 }
