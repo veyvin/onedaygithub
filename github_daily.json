@@ -1,7 +1,7 @@
 {
-  "name": "xerrors/Yuxi-Know",
-  "url": "https://github.com/xerrors/Yuxi-Know",
-  "desc": "结合LightRAG 知识库的知识图谱智能体平台。 An agent platform that integrates a LightRAG knowledge base and knowledge graphs. Build with LangChain v1 + Vue + FastAPI, support DeepAgents、MinerU PDF、Neo4j 、MCP.",
-  "stars": "3,206",
-  "date": "2025-12-26"
+  "name": "langgenius/dify",
+  "url": "https://github.com/langgenius/dify",
+  "desc": "Production-ready platform for agentic workflow development.",
+  "stars": "123,613",
+  "date": "2025-12-27"
 }
