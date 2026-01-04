@@ -1,7 +1,7 @@
 {
-  "name": "HQarroum/docker-android",
-  "url": "https://github.com/HQarroum/docker-android",
-  "desc": "🤖 A minimal and customizable Docker image running the Android emulator as a service.",
-  "stars": "1,772",
-  "date": "2026-01-03"
+  "name": "usememos/memos",
+  "url": "https://github.com/usememos/memos",
+  "desc": "An open-source, self-hosted note-taking service. Your thoughts, your data, your control — no tracking, no ads, no subscription fees.",
+  "stars": "50,258",
+  "date": "2026-01-04"
 }
