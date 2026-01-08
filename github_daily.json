@@ -1,7 +1,7 @@
 {
-  "name": "protocolbuffers/protobuf",
-  "url": "https://github.com/protocolbuffers/protobuf",
-  "desc": "Protocol Buffers - Google's data interchange format",
-  "stars": "70,093",
-  "date": "2026-01-07"
+  "name": "google/googletest",
+  "url": "https://github.com/google/googletest",
+  "desc": "GoogleTest - Google Testing and Mocking Framework",
+  "stars": "37,771",
+  "date": "2026-01-08"
 }
