@@ -1,7 +1,7 @@
 {
-  "name": "google/googletest",
-  "url": "https://github.com/google/googletest",
-  "desc": "GoogleTest - Google Testing and Mocking Framework",
-  "stars": "37,771",
-  "date": "2026-01-08"
+  "name": "ChromeDevTools/chrome-devtools-mcp",
+  "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+  "desc": "Chrome DevTools for coding agents",
+  "stars": "19,369",
+  "date": "2026-01-09"
 }
