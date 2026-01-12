@@ -1,7 +1,7 @@
 {
-  "name": "github/awesome-copilot",
-  "url": "https://github.com/github/awesome-copilot",
-  "desc": "Community-contributed instructions, prompts, and configurations to help you make the most of GitHub Copilot.",
-  "stars": "16,957",
-  "date": "2026-01-11"
+  "name": "frankbria/ralph-claude-code",
+  "url": "https://github.com/frankbria/ralph-claude-code",
+  "desc": "Autonomous AI development loop for Claude Code with intelligent exit detection",
+  "stars": "1,631",
+  "date": "2026-01-12"
 }
