@@ -1,7 +1,7 @@
 {
-  "name": "icloud-photos-downloader/icloud_photos_downloader",
-  "url": "https://github.com/icloud-photos-downloader/icloud_photos_downloader",
-  "desc": "A command-line tool to download photos from iCloud",
-  "stars": "11,028",
-  "date": "2026-01-14"
+  "name": "dev-sec/ansible-collection-hardening",
+  "url": "https://github.com/dev-sec/ansible-collection-hardening",
+  "desc": "This Ansible collection provides battle tested hardening for Linux, SSH, nginx, MySQL",
+  "stars": "5,019",
+  "date": "2026-01-15"
 }
