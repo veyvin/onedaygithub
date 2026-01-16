@@ -1,7 +1,7 @@
 {
-  "name": "dev-sec/ansible-collection-hardening",
-  "url": "https://github.com/dev-sec/ansible-collection-hardening",
-  "desc": "This Ansible collection provides battle tested hardening for Linux, SSH, nginx, MySQL",
-  "stars": "5,019",
-  "date": "2026-01-15"
+  "name": "eigent-ai/eigent",
+  "url": "https://github.com/eigent-ai/eigent",
+  "desc": "Eigent: The Open Source Cowork Desktop to Unlock Your Exceptional Productivity.",
+  "stars": "6,164",
+  "date": "2026-01-16"
 }
