@@ -1,7 +1,7 @@
 {
-  "name": "ai-dynamo/dynamo",
-  "url": "https://github.com/ai-dynamo/dynamo",
-  "desc": "A Datacenter Scale Distributed Inference Serving Framework",
-  "stars": "5,918",
-  "date": "2026-01-24"
+  "name": "VectifyAI/PageIndex",
+  "url": "https://github.com/VectifyAI/PageIndex",
+  "desc": "📑 PageIndex: Document Index for Vectorless, Reasoning-based RAG",
+  "stars": "8,420",
+  "date": "2026-01-25"
 }
