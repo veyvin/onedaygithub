@@ -1,7 +1,7 @@
 {
-  "name": "VectifyAI/PageIndex",
-  "url": "https://github.com/VectifyAI/PageIndex",
-  "desc": "📑 PageIndex: Document Index for Vectorless, Reasoning-based RAG",
-  "stars": "8,420",
-  "date": "2026-01-25"
+  "name": "Blaizzy/mlx-audio",
+  "url": "https://github.com/Blaizzy/mlx-audio",
+  "desc": "A text-to-speech (TTS), speech-to-text (STT) and speech-to-speech (STS) library built on Apple's MLX framework, providing efficient speech analysis on Apple Silicon.",
+  "stars": "4,338",
+  "date": "2026-01-26"
 }
