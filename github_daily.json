@@ -1,7 +1,7 @@
 {
-  "name": "Blaizzy/mlx-audio",
-  "url": "https://github.com/Blaizzy/mlx-audio",
-  "desc": "A text-to-speech (TTS), speech-to-text (STT) and speech-to-speech (STS) library built on Apple's MLX framework, providing efficient speech analysis on Apple Silicon.",
-  "stars": "4,338",
-  "date": "2026-01-26"
+  "name": "supermemoryai/supermemory",
+  "url": "https://github.com/supermemoryai/supermemory",
+  "desc": "Memory engine and app that is extremely fast, scalable. The Memory API for the AI era.",
+  "stars": "15,138",
+  "date": "2026-01-27"
 }
