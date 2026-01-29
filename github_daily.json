@@ -1,7 +1,7 @@
 {
-  "name": "badlogic/pi-mono",
-  "url": "https://github.com/badlogic/pi-mono",
-  "desc": "AI agent toolkit: coding agent CLI, unified LLM API, TUI & web UI libraries, Slack bot, vLLM pods",
-  "stars": "2,749",
-  "date": "2026-01-28"
+  "name": "moltbot/moltbot",
+  "url": "https://github.com/moltbot/moltbot",
+  "desc": "Your own personal AI assistant. Any OS. Any Platform. The lobster way. 🦞",
+  "stars": "90,255",
+  "date": "2026-01-29"
 }
