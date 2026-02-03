@@ -1,7 +1,7 @@
 {
-  "name": "pedramamini/Maestro",
-  "url": "https://github.com/pedramamini/Maestro",
-  "desc": "Agent Orchestration Command Center",
-  "stars": "1,002",
-  "date": "2026-02-02"
+  "name": "termux/termux-app",
+  "url": "https://github.com/termux/termux-app",
+  "desc": "Termux - a terminal emulator application for Android OS extendible by variety of packages.",
+  "stars": "49,951",
+  "date": "2026-02-03"
 }
