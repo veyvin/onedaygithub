@@ -1,7 +1,7 @@
 {
-  "name": "KeygraphHQ/shannon",
-  "url": "https://github.com/KeygraphHQ/shannon",
-  "desc": "Fully autonomous AI hacker to find actual exploits in your web apps. Shannon has achieved a 96.15% success rate on the hint-free, source-aware XBOW Benchmark.",
-  "stars": "10,223",
-  "date": "2026-02-08"
+  "name": "pydantic/monty",
+  "url": "https://github.com/pydantic/monty",
+  "desc": "A minimal, secure Python interpreter written in Rust for use by AI",
+  "stars": "2,895",
+  "date": "2026-02-09"
 }
