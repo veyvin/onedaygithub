@@ -1,7 +1,7 @@
 {
-  "name": "google/langextract",
-  "url": "https://github.com/google/langextract",
-  "desc": "A Python library for extracting structured information from unstructured text using LLMs with precise source grounding and interactive visualization.",
-  "stars": "28,681",
-  "date": "2026-02-11"
+  "name": "github/gh-aw",
+  "url": "https://github.com/github/gh-aw",
+  "desc": "GitHub Agentic Workflows",
+  "stars": "1,768",
+  "date": "2026-02-12"
 }
