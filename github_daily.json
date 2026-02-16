@@ -1,7 +1,7 @@
 {
-  "name": "steipete/gogcli",
-  "url": "https://github.com/steipete/gogcli",
-  "desc": "Google Suite CLI: Gmail, GCal, GDrive, GContacts.",
-  "stars": "3,032",
+  "name": "alibaba/zvec",
+  "url": "https://github.com/alibaba/zvec",
+  "desc": "A lightweight, lightning-fast, in-process vector database",
+  "stars": "2,680",
   "date": "2026-02-16"
 }
