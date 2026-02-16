@@ -1,7 +1,7 @@
 {
-  "name": "nautechsystems/nautilus_trader",
-  "url": "https://github.com/nautechsystems/nautilus_trader",
-  "desc": "A high-performance algorithmic trading platform and event-driven backtester",
-  "stars": "19,344",
+  "name": "steipete/gogcli",
+  "url": "https://github.com/steipete/gogcli",
+  "desc": "Google Suite CLI: Gmail, GCal, GDrive, GContacts.",
+  "stars": "3,032",
   "date": "2026-02-16"
 }
