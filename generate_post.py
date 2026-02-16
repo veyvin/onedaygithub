@@ -261,18 +261,47 @@ class Example:
         print(f"网络请求错误: {e}")
         return None, None
 
-def save_generated_post(title, content, repo_data):
-    """保存生成的文章"""
+def _derive_tags_from_repo(repo_data: dict) -> list[str]:
+    """
+    根据仓库信息推导额外标签（可选）。
+    可从项目名、描述中提取技术关键词，用于丰富标签。
+    """
+    tags = []
+    name = (repo_data.get("name") or "").lower()
+    desc = (repo_data.get("desc") or "").lower()
+    # 常见技术关键词
+    keywords = ["python", "rust", "javascript", "typescript", "go", "java", "ai", "llm", "quant", "trading", "cli", "web"]
+    for kw in keywords:
+        if kw in name or kw in desc:
+            tags.append(kw.capitalize())
+    return tags[:3]  # 最多 3 个推导标签
+
+
+def save_generated_post(title, content, repo_data, categories=None, tags=None):
+    """
+    保存生成的文章。
+    categories: 可选，分类列表，如 ["GitHub Trending", "开源项目"]
+    tags: 可选，标签列表。若不传则使用默认 + 从 repo 推导的标签
+    """
+    # 默认分类
+    final_categories = categories or ["GitHub Trending", "开源项目"]
+    # 默认标签 + 从仓库推导的标签
+    default_tags = ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布", "自动化"]
+    derived = _derive_tags_from_repo(repo_data)
+    final_tags = tags if tags is not None else (default_tags + [t for t in derived if t not in default_tags])
+
     post_data = {
         "title": title,
         "content": content,
         "repo_info": repo_data,
+        "categories": final_categories,
+        "tags": final_tags,
         "generated_at": datetime.now().isoformat()
     }
-    
+
     with open('generated_post.json', 'w', encoding='utf-8') as f:
         json.dump(post_data, f, ensure_ascii=False, indent=2)
-    
+
     print("文章已生成并保存到 generated_post.json")
 
 if __name__ == "__main__":

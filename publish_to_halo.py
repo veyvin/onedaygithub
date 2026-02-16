@@ -1,8 +1,145 @@
 import json
-import requests
 import os
-from datetime import datetime, timedelta
 import re
+import requests
+from datetime import datetime, timedelta
+
+# 默认分类和标签（可被 post_data 中的 categories/tags 覆盖）
+DEFAULT_CATEGORIES = ["GitHub Trending", "开源项目"]
+DEFAULT_TAGS = ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布", "自动化"]
+
+
+def _to_ascii_slug(s: str) -> str:
+    """生成 ASCII 安全 slug，用于 metadata.name"""
+    s = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", s.lower())
+    s = re.sub(r"-+", "-", s).strip("-")
+    if not s or not s[0].isascii():
+        s = "cat-" + (s or "default")[:50]
+    return (s or "default")[:63]
+
+
+def list_categories(halo_url: str, headers: dict) -> list:
+    """获取分类列表"""
+    url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/categories"
+    r = requests.get(url, headers=headers, params={"size": 100}, timeout=15)
+    if r.status_code != 200:
+        return []
+    data = r.json()
+    return data.get("items") or []
+
+
+def list_tags(halo_url: str, headers: dict) -> list:
+    """获取标签列表"""
+    url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/tags"
+    r = requests.get(url, headers=headers, params={"size": 100}, timeout=15)
+    if r.status_code != 200:
+        return []
+    data = r.json()
+    return data.get("items") or []
+
+
+def create_category(halo_url: str, headers: dict, display_name: str, slug: str) -> str | None:
+    """创建分类，返回 metadata.name"""
+    url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/categories"
+    name = _to_ascii_slug(slug)
+    payload = {
+        "apiVersion": "content.halo.run/v1alpha1",
+        "kind": "Category",
+        "metadata": {"name": name},
+        "spec": {
+            "displayName": display_name,
+            "slug": slug or name,
+            "description": "",
+            "cover": "",
+            "template": "",
+            "priority": 0,
+            "children": [],
+        },
+    }
+    r = requests.post(url, headers=headers, json=payload, timeout=15)
+    if r.status_code not in (200, 201):
+        print(f"   创建分类失败 [{display_name}]: {r.status_code} - {r.text[:150]}")
+        return None
+    data = r.json()
+    return data.get("metadata", {}).get("name")
+
+
+def create_tag(halo_url: str, headers: dict, display_name: str, slug: str) -> str | None:
+    """创建标签，返回 metadata.name"""
+    url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/tags"
+    name = _to_ascii_slug(slug)
+    payload = {
+        "apiVersion": "content.halo.run/v1alpha1",
+        "kind": "Tag",
+        "metadata": {"name": name},
+        "spec": {"displayName": display_name, "slug": slug or name},
+    }
+    r = requests.post(url, headers=headers, json=payload, timeout=15)
+    if r.status_code not in (200, 201):
+        print(f"   创建标签失败 [{display_name}]: {r.status_code} - {r.text[:150]}")
+        return None
+    data = r.json()
+    return data.get("metadata", {}).get("name")
+
+
+def ensure_category(halo_url: str, headers: dict, display_name: str) -> str | None:
+    """确保分类存在，返回 metadata.name。不存在则创建"""
+    slug = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", display_name.lower())
+    slug = re.sub(r"-+", "-", slug).strip("-") or "default"
+    cats = list_categories(halo_url, headers)
+    for c in cats:
+        s = c.get("spec", {})
+        if s.get("displayName") == display_name or s.get("slug") == slug:
+            return c.get("metadata", {}).get("name")
+    created = create_category(halo_url, headers, display_name, slug)
+    if created:
+        return created
+    if cats:
+        return cats[0].get("metadata", {}).get("name")
+    return None
+
+
+def ensure_tag(halo_url: str, headers: dict, display_name: str) -> str | None:
+    """确保标签存在，返回 metadata.name。不存在则创建"""
+    slug = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", display_name.lower())
+    slug = re.sub(r"-+", "-", slug).strip("-") or "default"
+    tags_list = list_tags(halo_url, headers)
+    for t in tags_list:
+        s = t.get("spec", {})
+        if s.get("displayName") == display_name or s.get("slug") == slug:
+            return t.get("metadata", {}).get("name")
+    created = create_tag(halo_url, headers, display_name, slug)
+    if created:
+        return created
+    if tags_list:
+        return tags_list[0].get("metadata", {}).get("name")
+    return None
+
+
+def resolve_categories_and_tags(
+    halo_url: str,
+    headers: dict,
+    category_names: list[str],
+    tag_names: list[str],
+) -> tuple[list[str], list[str]]:
+    """
+    将分类、标签的显示名解析为 metadata.name（ID）。
+    不存在则自动创建。若都为空，则使用已有分类/标签作为 fallback。
+    """
+    cat_ids = [ensure_category(halo_url, headers, str(c).strip()) for c in (category_names or []) if str(c).strip()]
+    tag_ids = [ensure_tag(halo_url, headers, str(t).strip()) for t in (tag_names or []) if str(t).strip()]
+    cat_ids = [x for x in cat_ids if x]
+    tag_ids = [x for x in tag_ids if x]
+
+    cats = list_categories(halo_url, headers)
+    tags_list = list_tags(halo_url, headers)
+    if not cat_ids and cats:
+        cat_ids = [c.get("metadata", {}).get("name") for c in cats if c.get("metadata", {}).get("name")]
+    if not tag_ids and tags_list:
+        tag_ids = [t.get("metadata", {}).get("name") for t in tags_list if t.get("metadata", {}).get("name")]
+
+    return cat_ids, tag_ids
+
 
 def read_generated_post():
     """读取生成的文章"""
@@ -53,29 +190,49 @@ def generate_unique_slug(repo_name, date_str):
 def publish_to_halo(post_data):
     """发布文章到 Halo"""
     
-    # Halo 配置
-    HALO_URL = "https://veyvin.com"
+    # Halo 配置（支持环境变量覆盖）
+    HALO_URL = (os.getenv("HALO_URL") or "https://veyvin.com").rstrip("/")
     HALO_TOKEN = os.getenv('HALO_TOKEN')
     
     if not HALO_TOKEN:
         print("错误: 未找到 HALO_TOKEN 环境变量")
         return None
-    
-    repo_info = post_data['repo_info']
-    title = post_data['title']
-    content = post_data['content']
-    
+
+    repo_info = post_data.get("repo_info") or {}
+    if not repo_info.get("name") or not repo_info.get("date"):
+        print("错误: post_data 缺少 repo_info.name 或 repo_info.date")
+        return None
+    title = post_data.get("title") or ""
+    content = post_data.get("content") or ""
+    if not title or not content:
+        print("错误: post_data 缺少 title 或 content")
+        return None
+
+    # 从 post_data 读取分类和标签，若无或类型错误则使用默认值
+    raw_cats = post_data.get("categories")
+    raw_tags = post_data.get("tags")
+    category_names = raw_cats if isinstance(raw_cats, list) else DEFAULT_CATEGORIES
+    tag_names = raw_tags if isinstance(raw_tags, list) else DEFAULT_TAGS
+
     # 生成唯一的 slug
     slug, previous_date_str = generate_unique_slug(repo_info['name'], repo_info['date'])
-    
+
     print(f"生成的唯一 slug: {slug}")
     print(f"发布日期: {previous_date_str}")
-    
+
     headers = {
         "Authorization": f"Bearer {HALO_TOKEN}",
         "Content-Type": "application/json"
     }
-    
+
+    # 解析分类和标签为 Halo 的 metadata.name（ID），不存在则创建
+    print("准备分类和标签...")
+    cat_ids, tag_ids = resolve_categories_and_tags(
+        HALO_URL, headers, category_names, tag_names
+    )
+    print(f"  分类: {category_names} -> {cat_ids}")
+    print(f"  标签: {tag_names[:5]}{'...' if len(tag_names) > 5 else ''} -> {tag_ids[:5]}{'...' if len(tag_ids) > 5 else ''}")
+
     payload = {
         "post": {
             "spec": {
@@ -93,11 +250,10 @@ def publish_to_halo(post_data):
                 "priority": 0,
                 "excerpt": {
                     "autoGenerate": False,
-                    "raw": repo_info['desc'][:150]
+                    "raw": (repo_info.get("desc") or "")[:150]
                 },
-                "categories": ["github-trending"],
-                # 添加指定的标签
-                "tags": ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布文章", "自动化"],
+                "categories": cat_ids,
+                "tags": tag_ids,
                 "htmlMetas": []
             },
             "apiVersion": "content.halo.run/v1alpha1",
@@ -128,7 +284,8 @@ def publish_to_halo(post_data):
             print(f"🔗 文章 slug: {slug}")
             print(f"📅 GitHub 原始日期: {repo_info['date']}")
             print(f"🕗 发布时间 (北京时间): {previous_date_str}T08:00:00+08:00")
-            print(f"🏷️ 文章标签: GitHub, Trending, 开源项目, 每日推荐, 自动发布文章, 自动化")
+            print(f"🏷️ 文章分类: {category_names}")
+            print(f"🏷️ 文章标签: {tag_names}")
             print(f"📂 项目名称: {repo_info['name']}")
             return response.json()
         else:
