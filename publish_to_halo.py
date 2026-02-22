@@ -2,11 +2,31 @@ import json
 import os
 import re
 import requests
+import time
 from datetime import datetime, timedelta
 
 # 默认分类和标签（可被 post_data 中的 categories/tags 覆盖）
 DEFAULT_CATEGORIES = ["GitHub Trending", "开源项目"]
 DEFAULT_TAGS = ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布", "自动化"]
+
+
+def retry_request(max_retries=3, delay=2):
+    """网络请求重试装饰器，处理临时失败"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries < max_retries:
+                try:
+                    result = func(*args, **kwargs)
+                    return result
+                except requests.exceptions.RequestException as e:
+                    retries += 1
+                    if retries >= max_retries:
+                        raise
+                    print(f"  网络请求失败，{delay}秒后重试 ({retries}/{max_retries}): {e}")
+                    time.sleep(delay)
+        return wrapper
+    return decorator
 
 
 def _to_ascii_slug(s: str) -> str:
@@ -18,6 +38,7 @@ def _to_ascii_slug(s: str) -> str:
     return (s or "default")[:63]
 
 
+@retry_request(max_retries=3, delay=3)
 def list_categories(halo_url: str, headers: dict) -> list:
     """获取分类列表"""
     url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/categories"
@@ -28,6 +49,7 @@ def list_categories(halo_url: str, headers: dict) -> list:
     return data.get("items") or []
 
 
+@retry_request(max_retries=3, delay=3)
 def list_tags(halo_url: str, headers: dict) -> list:
     """获取标签列表"""
     url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/tags"
@@ -38,6 +60,7 @@ def list_tags(halo_url: str, headers: dict) -> list:
     return data.get("items") or []
 
 
+@retry_request(max_retries=3, delay=3)
 def create_category(halo_url: str, headers: dict, display_name: str, slug: str) -> str | None:
     """创建分类，返回 metadata.name"""
     url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/categories"
@@ -64,6 +87,7 @@ def create_category(halo_url: str, headers: dict, display_name: str, slug: str) 
     return data.get("metadata", {}).get("name")
 
 
+@retry_request(max_retries=3, delay=3)
 def create_tag(halo_url: str, headers: dict, display_name: str, slug: str) -> str | None:
     """创建标签，返回 metadata.name"""
     url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/tags"
@@ -187,6 +211,7 @@ def generate_unique_slug(repo_name, date_str):
     
     return slug, beijing_date_str
 
+@retry_request(max_retries=3, delay=5)
 def publish_to_halo(post_data):
     """发布文章到 Halo"""
     
@@ -288,6 +313,11 @@ def publish_to_halo(post_data):
             print(f"🏷️ 文章标签: {tag_names}")
             print(f"📂 项目名称: {repo_info['name']}")
             return response.json()
+        elif response.status_code == 530:
+            # Cloudflare 530 错误，通常是临时网络问题
+            print(f"🌐 Cloudflare 530 错误: {response.text[:200]}")
+            print("💡 提示: 这通常是临时的网络连接问题，重试可能会解决")
+            raise requests.exceptions.RequestException("Cloudflare 530 Tunnel error")
         else:
             print(f"❌ 发布失败: {response.status_code}")
             print(f"📋 错误详情: {response.text}")
@@ -303,7 +333,7 @@ def publish_to_halo(post_data):
             
     except requests.exceptions.RequestException as e:
         print(f"🌐 发布请求错误: {e}")
-        return None
+        raise
 
 if __name__ == "__main__":
     # 读取生成的文章
