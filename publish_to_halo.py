@@ -111,13 +111,21 @@ def ensure_category(halo_url: str, headers: dict, display_name: str) -> str | No
     slug = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", display_name.lower())
     slug = re.sub(r"-+", "-", slug).strip("-") or "default"
     cats = list_categories(halo_url, headers)
+    
+    # 详细检查分类是否存在
     for c in cats:
         s = c.get("spec", {})
-        if s.get("displayName") == display_name or s.get("slug") == slug:
+        if s.get("displayName") == display_name:
             return c.get("metadata", {}).get("name")
+        if s.get("slug") == slug:
+            return c.get("metadata", {}).get("name")
+    
+    # 分类不存在，创建新分类
     created = create_category(halo_url, headers, display_name, slug)
     if created:
         return created
+    
+    # 创建失败，返回第一个分类作为 fallback
     if cats:
         return cats[0].get("metadata", {}).get("name")
     return None
@@ -128,13 +136,21 @@ def ensure_tag(halo_url: str, headers: dict, display_name: str) -> str | None:
     slug = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", display_name.lower())
     slug = re.sub(r"-+", "-", slug).strip("-") or "default"
     tags_list = list_tags(halo_url, headers)
+    
+    # 详细检查标签是否存在
     for t in tags_list:
         s = t.get("spec", {})
-        if s.get("displayName") == display_name or s.get("slug") == slug:
+        if s.get("displayName") == display_name:
             return t.get("metadata", {}).get("name")
+        if s.get("slug") == slug:
+            return t.get("metadata", {}).get("name")
+    
+    # 标签不存在，创建新标签
     created = create_tag(halo_url, headers, display_name, slug)
     if created:
         return created
+    
+    # 创建失败，返回第一个标签作为 fallback
     if tags_list:
         return tags_list[0].get("metadata", {}).get("name")
     return None
@@ -150,11 +166,32 @@ def resolve_categories_and_tags(
     将分类、标签的显示名解析为 metadata.name（ID）。
     不存在则自动创建。若都为空，则使用已有分类/标签作为 fallback。
     """
-    cat_ids = [ensure_category(halo_url, headers, str(c).strip()) for c in (category_names or []) if str(c).strip()]
-    tag_ids = [ensure_tag(halo_url, headers, str(t).strip()) for t in (tag_names or []) if str(t).strip()]
+    # 去重处理，避免重复创建相同的分类和标签
+    unique_category_names = []
+    seen_categories = set()
+    for c in (category_names or []):
+        c_str = str(c).strip()
+        if c_str and c_str not in seen_categories:
+            unique_category_names.append(c_str)
+            seen_categories.add(c_str)
+    
+    unique_tag_names = []
+    seen_tags = set()
+    for t in (tag_names or []):
+        t_str = str(t).strip()
+        if t_str and t_str not in seen_tags:
+            unique_tag_names.append(t_str)
+            seen_tags.add(t_str)
+    
+    # 解析分类和标签
+    cat_ids = [ensure_category(halo_url, headers, c) for c in unique_category_names]
+    tag_ids = [ensure_tag(halo_url, headers, t) for t in unique_tag_names]
+    
+    # 过滤无效 ID
     cat_ids = [x for x in cat_ids if x]
     tag_ids = [x for x in tag_ids if x]
 
+    # 如果没有分类或标签，使用已有数据作为 fallback
     cats = list_categories(halo_url, headers)
     tags_list = list_tags(halo_url, headers)
     if not cat_ids and cats:
