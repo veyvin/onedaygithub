@@ -1,7 +1,7 @@
 {
-  "name": "clockworklabs/SpacetimeDB",
-  "url": "https://github.com/clockworklabs/SpacetimeDB",
-  "desc": "Development at the speed of light",
-  "stars": "20,922",
-  "date": "2026-02-27"
+  "name": "ruvnet/wifi-densepose",
+  "url": "https://github.com/ruvnet/wifi-densepose",
+  "desc": "Production-ready implementation of InvisPose - a revolutionary WiFi-based dense human pose estimation system that enables real-time full-body tracking through walls using commodity mesh routers",
+  "stars": "9,428",
+  "date": "2026-02-28"
 }
