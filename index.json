@@ -1,0 +1,7 @@
+{
+  "name": "QwenLM/Qwen-Agent",
+  "url": "https://github.com/QwenLM/Qwen-Agent",
+  "desc": "Agent framework and applications built upon Qwen>=3.0, featuring Function Calling, MCP, Code Interpreter, RAG, Chrome extension, etc.",
+  "stars": "14,674",
+  "date": "2026-03-07"
+}
