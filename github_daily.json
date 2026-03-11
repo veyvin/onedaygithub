@@ -1,7 +1,7 @@
 {
-  "name": "GoogleCloudPlatform/generative-ai",
-  "url": "https://github.com/GoogleCloudPlatform/generative-ai",
-  "desc": "Sample code and notebooks for Generative AI on Google Cloud, with Gemini on Vertex AI",
-  "stars": "14,506",
-  "date": "2026-03-09"
+  "name": "NousResearch/hermes-agent",
+  "url": "https://github.com/NousResearch/hermes-agent",
+  "desc": "The agent that grows with you",
+  "stars": "3,867",
+  "date": "2026-03-11"
 }
