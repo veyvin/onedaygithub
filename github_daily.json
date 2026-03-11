@@ -1,7 +1,7 @@
 {
-  "name": "NousResearch/hermes-agent",
-  "url": "https://github.com/NousResearch/hermes-agent",
-  "desc": "The agent that grows with you",
-  "stars": "3,867",
+  "name": "promptfoo/promptfoo",
+  "url": "https://github.com/promptfoo/promptfoo",
+  "desc": "Test your prompts, agents, and RAGs. AI Red teaming, pentesting, and vulnerability scanning for LLMs. Compare performance of GPT, Claude, Gemini, Llama, and more. Simple declarative configs with command line and CI/CD integration.",
+  "stars": "12,005",
   "date": "2026-03-11"
 }
