@@ -1,7 +1,7 @@
 {
-  "name": "alibaba/page-agent",
-  "url": "https://github.com/alibaba/page-agent",
-  "desc": "JavaScript in-page GUI agent. Control web interfaces with natural language.",
-  "stars": "3,724",
-  "date": "2026-03-11"
+  "name": "microsoft/BitNet",
+  "url": "https://github.com/microsoft/BitNet",
+  "desc": "Official inference framework for 1-bit LLMs",
+  "stars": "32,491",
+  "date": "2026-03-13"
 }
