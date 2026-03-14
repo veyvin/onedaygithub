@@ -1,7 +1,7 @@
 {
-  "name": "microsoft/BitNet",
-  "url": "https://github.com/microsoft/BitNet",
-  "desc": "Official inference framework for 1-bit LLMs",
-  "stars": "32,491",
-  "date": "2026-03-13"
+  "name": "langflow-ai/openrag",
+  "url": "https://github.com/langflow-ai/openrag",
+  "desc": "OpenRAG is a comprehensive, single package Retrieval-Augmented Generation platform built on Langflow, Docling, and Opensearch.",
+  "stars": "2,296",
+  "date": "2026-03-14"
 }
