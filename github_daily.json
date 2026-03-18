@@ -1,7 +1,7 @@
 {
-  "name": "codecrafters-io/build-your-own-x",
-  "url": "https://github.com/codecrafters-io/build-your-own-x",
-  "desc": "Master programming by recreating your favorite technologies from scratch.",
-  "stars": "479,981",
+  "name": "jarrodwatts/claude-hud",
+  "url": "https://github.com/jarrodwatts/claude-hud",
+  "desc": "A Claude Code plugin that shows what's happening - context usage, active tools, running agents, and todo progress",
+  "stars": "6,829",
   "date": "2026-03-18"
 }
