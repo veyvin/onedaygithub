@@ -1,7 +1,7 @@
 {
-  "name": "newton-physics/newton",
-  "url": "https://github.com/newton-physics/newton",
-  "desc": "An open-source, GPU-accelerated physics simulation engine built upon NVIDIA Warp, specifically targeting roboticists and simulation researchers.",
-  "stars": "2,945",
+  "name": "shadps4-emu/shadPS4",
+  "url": "https://github.com/shadps4-emu/shadPS4",
+  "desc": "PlayStation 4 emulator for Windows, Linux and macOS written in C++",
+  "stars": "30,054",
   "date": "2026-03-19"
 }
