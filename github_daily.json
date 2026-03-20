@@ -1,7 +1,7 @@
 {
-  "name": "langchain-ai/open-swe",
-  "url": "https://github.com/langchain-ai/open-swe",
-  "desc": "An Open-Source Asynchronous Coding Agent",
-  "stars": "6,663",
-  "date": "2026-03-19"
+  "name": "opendataloader-project/opendataloader-pdf",
+  "url": "https://github.com/opendataloader-project/opendataloader-pdf",
+  "desc": "PDF Parser for AI-ready data. Automate PDF accessibility. Open-source.",
+  "stars": "5,846",
+  "date": "2026-03-20"
 }
