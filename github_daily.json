@@ -1,7 +1,7 @@
 {
-  "name": "PaddlePaddle/PaddleOCR",
-  "url": "https://github.com/PaddlePaddle/PaddleOCR",
-  "desc": "Turn any PDF or image document into structured data for your AI. A powerful, lightweight OCR toolkit that bridges the gap between images/PDFs and LLMs. Supports 100+ languages.",
-  "stars": "74,292",
-  "date": "2026-04-01"
+  "name": "google-research/timesfm",
+  "url": "https://github.com/google-research/timesfm",
+  "desc": "TimesFM (Time Series Foundation Model) is a pretrained time-series foundation model developed by Google Research for time-series forecasting.",
+  "stars": "12,245",
+  "date": "2026-04-02"
 }
