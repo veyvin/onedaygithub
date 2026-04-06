@@ -1,7 +1,7 @@
 {
-  "name": "Blaizzy/mlx-vlm",
-  "url": "https://github.com/Blaizzy/mlx-vlm",
-  "desc": "MLX-VLM is a package for inference and fine-tuning of Vision Language Models (VLMs) on your Mac using MLX.",
-  "stars": "3,639",
-  "date": "2026-04-05"
+  "name": "google-ai-edge/gallery",
+  "url": "https://github.com/google-ai-edge/gallery",
+  "desc": "A gallery that showcases on-device ML/GenAI use cases and allows people to try and use models locally.",
+  "stars": "17,074",
+  "date": "2026-04-06"
 }
