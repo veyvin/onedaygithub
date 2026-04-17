@@ -1,7 +1,7 @@
 {
-  "name": "Lordog/dive-into-llms",
-  "url": "https://github.com/Lordog/dive-into-llms",
-  "desc": "《动手学大模型Dive into LLMs》系列编程实践教程",
-  "stars": "29,716",
-  "date": "2026-04-16"
+  "name": "lsdefine/GenericAgent",
+  "url": "https://github.com/lsdefine/GenericAgent",
+  "desc": "Self-evolving agent: grows skill tree from 3.3K-line seed, achieving full system control with 6x less token consumption",
+  "stars": "2,914",
+  "date": "2026-04-17"
 }
