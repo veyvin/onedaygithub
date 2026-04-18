@@ -1,7 +1,7 @@
 {
-  "name": "lsdefine/GenericAgent",
-  "url": "https://github.com/lsdefine/GenericAgent",
-  "desc": "Self-evolving agent: grows skill tree from 3.3K-line seed, achieving full system control with 6x less token consumption",
-  "stars": "2,914",
-  "date": "2026-04-17"
+  "name": "EvoMap/evolver",
+  "url": "https://github.com/EvoMap/evolver",
+  "desc": "The GEP-Powered Self-Evolution Engine for AI Agents. Genome Evolution Protocol. | evomap.ai",
+  "stars": "4,342",
+  "date": "2026-04-18"
 }
