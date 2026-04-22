@@ -1,7 +1,7 @@
 {
-  "name": "thunderbird/thunderbolt",
-  "url": "https://github.com/thunderbird/thunderbolt",
-  "desc": "AI You Control: Choose your models. Own your data. Eliminate vendor lock-in.",
-  "stars": "1,634",
-  "date": "2026-04-19"
+  "name": "zilliztech/claude-context",
+  "url": "https://github.com/zilliztech/claude-context",
+  "desc": "Code search MCP for Claude Code. Make entire codebase the context for any coding agent.",
+  "stars": "6,720",
+  "date": "2026-04-22"
 }
