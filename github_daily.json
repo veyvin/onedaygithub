@@ -1,7 +1,7 @@
 {
-  "name": "ComposioHQ/awesome-codex-skills",
-  "url": "https://github.com/ComposioHQ/awesome-codex-skills",
-  "desc": "A curated list of practical Codex skills for automating workflows across the Codex CLI and API.",
-  "stars": "2,942",
-  "date": "2026-04-28"
+  "name": "davila7/claude-code-templates",
+  "url": "https://github.com/davila7/claude-code-templates",
+  "desc": "CLI tool for configuring and monitoring Claude Code",
+  "stars": "26,214",
+  "date": "2026-04-29"
 }
