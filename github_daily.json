@@ -1,7 +1,7 @@
 {
-  "name": "rohitg00/agentmemory",
-  "url": "https://github.com/rohitg00/agentmemory",
-  "desc": "#1 Persistent memory for AI coding agents based on real-world benchmarks",
-  "stars": "3,542",
-  "date": "2026-05-10"
+  "name": "CloakHQ/CloakBrowser",
+  "url": "https://github.com/CloakHQ/CloakBrowser",
+  "desc": "Stealth Chromium that passes every bot detection test. Drop-in Playwright replacement with source-level fingerprint patches. 30/30 tests passed.",
+  "stars": "4,962",
+  "date": "2026-05-11"
 }
