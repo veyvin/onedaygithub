@@ -1,7 +1,7 @@
 {
-  "name": "tinyhumansai/openhuman",
-  "url": "https://github.com/tinyhumansai/openhuman",
-  "desc": "Your Personal AI super intelligence. Private, Simple and extremely powerful.",
-  "stars": "2,988",
-  "date": "2026-05-13"
+  "name": "influxdata/telegraf",
+  "url": "https://github.com/influxdata/telegraf",
+  "desc": "Agent for collecting, processing, aggregating, and writing metrics, logs, and other arbitrary data.",
+  "stars": "17,039",
+  "date": "2026-05-14"
 }
