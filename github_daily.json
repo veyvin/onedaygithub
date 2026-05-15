@@ -1,7 +1,7 @@
 {
-  "name": "influxdata/telegraf",
-  "url": "https://github.com/influxdata/telegraf",
-  "desc": "Agent for collecting, processing, aggregating, and writing metrics, logs, and other arbitrary data.",
-  "stars": "17,039",
-  "date": "2026-05-14"
+  "name": "K-Dense-AI/scientific-agent-skills",
+  "url": "https://github.com/K-Dense-AI/scientific-agent-skills",
+  "desc": "A set of ready to use Agent Skills for research, science, engineering, analysis, finance and writing.",
+  "stars": "21,902",
+  "date": "2026-05-15"
 }
