@@ -1,7 +1,7 @@
 {
-  "name": "supertone-inc/supertonic",
-  "url": "https://github.com/supertone-inc/supertonic",
-  "desc": "Lightning-Fast, On-Device, Multilingual TTS — running natively via ONNX.",
-  "stars": "6,116",
-  "date": "2026-05-16"
+  "name": "oven-sh/bun",
+  "url": "https://github.com/oven-sh/bun",
+  "desc": "Incredibly fast JavaScript runtime, bundler, test runner, and package manager – all in one",
+  "stars": "91,330",
+  "date": "2026-05-17"
 }
