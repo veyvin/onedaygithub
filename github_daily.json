@@ -1,7 +1,7 @@
 {
-  "name": "anthropics/claude-plugins-official",
-  "url": "https://github.com/anthropics/claude-plugins-official",
-  "desc": "Official, Anthropic-managed directory of high quality Claude Code Plugins.",
-  "stars": "20,316",
-  "date": "2026-05-20"
+  "name": "colbymchenry/codegraph",
+  "url": "https://github.com/colbymchenry/codegraph",
+  "desc": "Pre-indexed code knowledge graph for Claude Code, Codex, Cursor, and OpenCode — fewer tokens, fewer tool calls, 100% local",
+  "stars": "10,347",
+  "date": "2026-05-21"
 }
