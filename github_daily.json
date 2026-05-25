@@ -1,7 +1,7 @@
 {
-  "name": "Lum1104/Understand-Anything",
-  "url": "https://github.com/Lum1104/Understand-Anything",
-  "desc": "Graphs that teach > graphs that impress. Turn any code into an interactive knowledge graph you can explore, search, and ask questions about. Works with Claude Code, Codex, Cursor, Copilot, Gemini CLI, and more.",
-  "stars": "22,090",
-  "date": "2026-05-24"
+  "name": "anthropics/knowledge-work-plugins",
+  "url": "https://github.com/anthropics/knowledge-work-plugins",
+  "desc": "Open source repository of plugins primarily intended for knowledge workers to use in Claude Cowork",
+  "stars": "14,215",
+  "date": "2026-05-25"
 }
