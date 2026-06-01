@@ -1,7 +1,7 @@
 {
-  "name": "cursor/plugins",
-  "url": "https://github.com/cursor/plugins",
-  "desc": "Cursor plugin specification and official plugins",
-  "stars": "1,483",
-  "date": "2026-05-31"
+  "name": "nesquena/hermes-webui",
+  "url": "https://github.com/nesquena/hermes-webui",
+  "desc": "Hermes WebUI: The best way to use Hermes Agent from the web or from your phone!",
+  "stars": "10,179",
+  "date": "2026-06-01"
 }
