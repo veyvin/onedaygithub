@@ -1,7 +1,7 @@
 {
-  "name": "aquasecurity/trivy",
-  "url": "https://github.com/aquasecurity/trivy",
-  "desc": "Find vulnerabilities, misconfigurations, secrets, SBOM in containers, Kubernetes, code repositories, clouds and more",
-  "stars": "35,462",
-  "date": "2026-06-04"
+  "name": "github/spec-kit",
+  "url": "https://github.com/github/spec-kit",
+  "desc": "💫 Toolkit to help you get started with Spec-Driven Development",
+  "stars": "108,688",
+  "date": "2026-06-05"
 }
