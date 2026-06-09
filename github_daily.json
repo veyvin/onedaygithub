@@ -1,7 +1,7 @@
 {
-  "name": "opencv/opencv",
-  "url": "https://github.com/opencv/opencv",
-  "desc": "Open Source Computer Vision Library",
-  "stars": "88,169",
-  "date": "2026-06-08"
+  "name": "RyanCodrai/turbovec",
+  "url": "https://github.com/RyanCodrai/turbovec",
+  "desc": "A vector index built on TurboQuant, written in Rust with Python bindings",
+  "stars": "9,130",
+  "date": "2026-06-09"
 }
