@@ -217,7 +217,7 @@ class Example:
     }
     
     payload = {
-        "model": "deepseek-chat",
+        "model": "deepseek-v4-pro",
         "messages": [
             {
                 "role": "user",
@@ -225,7 +225,7 @@ class Example:
             }
         ],
         "temperature": 0.7,
-        "max_tokens": 8000,
+        "max_tokens": 32000,
         "stream": False
     }
     
