@@ -1,7 +1,7 @@
 {
-  "name": "RyanCodrai/turbovec",
-  "url": "https://github.com/RyanCodrai/turbovec",
-  "desc": "A vector index built on TurboQuant, written in Rust with Python bindings",
-  "stars": "9,130",
-  "date": "2026-06-09"
+  "name": "roboflow/supervision",
+  "url": "https://github.com/roboflow/supervision",
+  "desc": "We write your reusable computer vision tools. 💜",
+  "stars": "43,122",
+  "date": "2026-06-10"
 }
