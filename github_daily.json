@@ -1,7 +1,7 @@
 {
-  "name": "phuryn/pm-skills",
-  "url": "https://github.com/phuryn/pm-skills",
-  "desc": "PM Skills Marketplace: 100+ agentic skills, commands, and plugins — from discovery to strategy, execution, launch, and growth.",
-  "stars": "15,255",
-  "date": "2026-06-11"
+  "name": "apple/container",
+  "url": "https://github.com/apple/container",
+  "desc": "A tool for creating and running Linux containers using lightweight virtual machines on a Mac. It is written in Swift, and optimized for Apple silicon.",
+  "stars": "33,091",
+  "date": "2026-06-12"
 }
