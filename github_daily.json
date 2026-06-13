@@ -1,7 +1,7 @@
 {
-  "name": "apple/container",
-  "url": "https://github.com/apple/container",
-  "desc": "A tool for creating and running Linux containers using lightweight virtual machines on a Mac. It is written in Swift, and optimized for Apple silicon.",
-  "stars": "33,091",
-  "date": "2026-06-12"
+  "name": "music-assistant/server",
+  "url": "https://github.com/music-assistant/server",
+  "desc": "Music Assistant is a free, opensource Media library manager that connects to your streaming services and a wide range of connected speakers. The server is the beating heart, the core of Music Assistant and must run on an always-on device like a Raspberry Pi, a NAS or an Intel NUC or alike.",
+  "stars": "1,817",
+  "date": "2026-06-13"
 }
