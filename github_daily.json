@@ -1,7 +1,7 @@
 {
-  "name": "music-assistant/server",
-  "url": "https://github.com/music-assistant/server",
-  "desc": "Music Assistant is a free, opensource Media library manager that connects to your streaming services and a wide range of connected speakers. The server is the beating heart, the core of Music Assistant and must run on an always-on device like a Raspberry Pi, a NAS or an Intel NUC or alike.",
-  "stars": "1,817",
-  "date": "2026-06-13"
+  "name": "chatwoot/chatwoot",
+  "url": "https://github.com/chatwoot/chatwoot",
+  "desc": "Open-source live-chat, email support, omni-channel desk. An alternative to Intercom, Zendesk, Salesforce Service Cloud etc. 🔥💬",
+  "stars": "30,917",
+  "date": "2026-06-14"
 }
