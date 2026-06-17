@@ -10,9 +10,7 @@
 2. 通过 DeepSeek 大模型为该项目撰写结构化、可读性强的技术介绍文章；
 3. 自动调用 Halo Console API，将文章发布到 [veyvin.com](https://veyvin.com)（小伞帝的 Halo 博客）。
 
-> 📸 这是使用本项目自动生成、并最终呈现在 Halo 博客（小伞帝）上的文章示例：
-
-![小伞帝博客首页](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=modern%20personal%20tech%20blog%20homepage%20with%20navigation%20bar%2C%20large%20hero%20banner%20showing%20bear%20in%20autumn%20landscape%2C%20category%20tags%20chips%2C%20two-column%20article%20cards%20with%20mountain%20and%20grass%20landscape%20photos%2C%20right%20sidebar%20with%20trending%20article%20list%2C%20clean%20minimalist%20design%2C%20rounded%20corners%2C%20soft%20shadows%2C%20pastel%20colors&image_size=landscape_16_9)
+> 📸 这是使用本项目自动生成、并最终呈现在 Halo 博客（小伞帝）上的文章示例：仓库 [veyvin/onedaygithub](https://github.com/veyvin/onedaygithub) 通过 GitHub Actions 每日抓取 trending 项目，再由 DeepSeek 生成文章，最后由 `publish_to_halo.py` 推送到 Halo。运行后的实际效果请见 [veyvin.com](https://veyvin.com)。
 
 ## 功能特性
 
