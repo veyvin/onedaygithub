@@ -1,7 +1,7 @@
 {
-  "name": "teslamate-org/teslamate",
-  "url": "https://github.com/teslamate-org/teslamate",
-  "desc": "A self-hosted data logger for your Tesla 🚘 [main maintainer=@JakobLichterfeld]",
-  "stars": "8,280",
-  "date": "2026-06-16"
+  "name": "swc-project/swc",
+  "url": "https://github.com/swc-project/swc",
+  "desc": "Rust-based platform for the Web",
+  "stars": "33,997",
+  "date": "2026-06-17"
 }
