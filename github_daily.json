@@ -1,7 +1,7 @@
 {
-  "name": "DeusData/codebase-memory-mcp",
-  "url": "https://github.com/DeusData/codebase-memory-mcp",
-  "desc": "High-performance code intelligence MCP server. Indexes codebases into a persistent knowledge graph — average repo in milliseconds. 158 languages, sub-ms queries, 99% fewer tokens. Single static binary, zero dependencies.",
-  "stars": "5,695",
-  "date": "2026-06-18"
+  "name": "n0-computer/iroh",
+  "url": "https://github.com/n0-computer/iroh",
+  "desc": "IP addresses break, dial keys instead. Modular networking stack in Rust.",
+  "stars": "10,053",
+  "date": "2026-06-19"
 }
