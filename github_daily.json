@@ -1,7 +1,7 @@
 {
-  "name": "interviewstreet/hiring-agent",
-  "url": "https://github.com/interviewstreet/hiring-agent",
-  "desc": "AI agent to evaluate and score resumes.",
-  "stars": "2,335",
-  "date": "2026-06-25"
+  "name": "google-labs-code/design.md",
+  "url": "https://github.com/google-labs-code/design.md",
+  "desc": "A format specification for describing a visual identity to coding agents. DESIGN.md gives agents a persistent, structured understanding of a design system.",
+  "stars": "19,618",
+  "date": "2026-06-26"
 }
