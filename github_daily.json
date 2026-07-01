@@ -1,7 +1,7 @@
 {
-  "name": "cupy/cupy",
-  "url": "https://github.com/cupy/cupy",
-  "desc": "NumPy & SciPy for GPU",
-  "stars": "11,880",
-  "date": "2026-06-30"
+  "name": "hasaneyldrm/exercises-dataset",
+  "url": "https://github.com/hasaneyldrm/exercises-dataset",
+  "desc": "A comprehensive dataset of 433 fitness exercises. Each entry includes name, category, target muscle group, equipment, instructions, thumbnail image, and animation video.",
+  "stars": "7,064",
+  "date": "2026-07-01"
 }
