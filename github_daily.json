@@ -1,7 +1,7 @@
 {
-  "name": "JuliusBrussee/caveman",
-  "url": "https://github.com/JuliusBrussee/caveman",
-  "desc": "🪨 why use many token when few token do trick — Claude Code skill that cuts 65% of tokens by talking like caveman",
-  "stars": "81,302",
-  "date": "2026-07-03"
+  "name": "openai/codex-plugin-cc",
+  "url": "https://github.com/openai/codex-plugin-cc",
+  "desc": "Use Codex from Claude Code to review code or delegate tasks.",
+  "stars": "23,313",
+  "date": "2026-07-04"
 }
