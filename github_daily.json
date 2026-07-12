@@ -1,7 +1,7 @@
 {
-  "name": "wonderwhy-er/DesktopCommanderMCP",
-  "url": "https://github.com/wonderwhy-er/DesktopCommanderMCP",
-  "desc": "This is MCP server for Claude that gives it terminal control, file system search and diff file editing capabilities",
-  "stars": "7,369",
-  "date": "2026-07-11"
+  "name": "catchorg/Catch2",
+  "url": "https://github.com/catchorg/Catch2",
+  "desc": "A modern, C++-native, test framework for unit-tests, TDD and BDD - using C++14, C++17 and later (C++11 support is in v2.x branch, and C++03 on the Catch1.x branch)",
+  "stars": "21,097",
+  "date": "2026-07-12"
 }
