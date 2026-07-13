@@ -1,7 +1,7 @@
 {
-  "name": "catchorg/Catch2",
-  "url": "https://github.com/catchorg/Catch2",
-  "desc": "A modern, C++-native, test framework for unit-tests, TDD and BDD - using C++14, C++17 and later (C++11 support is in v2.x branch, and C++03 on the Catch1.x branch)",
-  "stars": "21,097",
-  "date": "2026-07-12"
+  "name": "Dicklesworthstone/destructive_command_guard",
+  "url": "https://github.com/Dicklesworthstone/destructive_command_guard",
+  "desc": "The Destructive Command Guard (dcg) is for blocking dangerous git and shell commands from being executed by agents.",
+  "stars": "3,075",
+  "date": "2026-07-13"
 }
