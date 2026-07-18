@@ -1,7 +1,7 @@
 {
-  "name": "apache/ossie",
-  "url": "https://github.com/apache/ossie",
-  "desc": "Apache Ossie, industry wide specification effort to standardize how we exchange semantic metadata across analytics, AI and BI platforms, providing a vendor neutral, single source of truth for semantic data",
-  "stars": "947",
-  "date": "2026-07-17"
+  "name": "PostHog/posthog",
+  "url": "https://github.com/PostHog/posthog",
+  "desc": "🦔 PostHog is the leading platform for building self-driving products. Our developer tools – AI observability, analytics, session replay, flags, experiments, error tracking, logs, and more – capture all the context agents need to diagnose problems, uncover opportunities, and ship fixes. Steer it all from Slack, web, desktop, or the MCP.",
+  "stars": "36,220",
+  "date": "2026-07-18"
 }
