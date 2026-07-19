@@ -1,7 +1,7 @@
 {
-  "name": "PostHog/posthog",
-  "url": "https://github.com/PostHog/posthog",
-  "desc": "🦔 PostHog is the leading platform for building self-driving products. Our developer tools – AI observability, analytics, session replay, flags, experiments, error tracking, logs, and more – capture all the context agents need to diagnose problems, uncover opportunities, and ship fixes. Steer it all from Slack, web, desktop, or the MCP.",
-  "stars": "36,220",
-  "date": "2026-07-18"
+  "name": "Robbyant/lingbot-map",
+  "url": "https://github.com/Robbyant/lingbot-map",
+  "desc": "A feed-forward 3D foundation model for reconstructing scenes from streaming data",
+  "stars": "13,025",
+  "date": "2026-07-19"
 }
