@@ -1,7 +1,7 @@
 {
-  "name": "bojieli/ai-agent-book",
-  "url": "https://github.com/bojieli/ai-agent-book",
-  "desc": "《深入理解 AI Agent：设计原理与工程实践》（李博杰 著）开源主仓库：全书正文、编译版 PDF 与按章配套代码",
-  "stars": "6,573",
-  "date": "2026-07-20"
+  "name": "tirth8205/code-review-graph",
+  "url": "https://github.com/tirth8205/code-review-graph",
+  "desc": "Local-first code intelligence graph for MCP and CLI. Builds a persistent map of your codebase so AI coding tools read only what matters, with benchmarked context reductions on reviews and large-repo workflows.",
+  "stars": "23,460",
+  "date": "2026-07-21"
 }
