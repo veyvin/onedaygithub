@@ -1,7 +1,7 @@
 {
-  "name": "tirth8205/code-review-graph",
-  "url": "https://github.com/tirth8205/code-review-graph",
-  "desc": "Local-first code intelligence graph for MCP and CLI. Builds a persistent map of your codebase so AI coding tools read only what matters, with benchmarked context reductions on reviews and large-repo workflows.",
-  "stars": "23,460",
-  "date": "2026-07-21"
+  "name": "ayghri/i-have-adhd",
+  "url": "https://github.com/ayghri/i-have-adhd",
+  "desc": "A skill for your coding agent to stop it from burying the answer. ADHD-friendly output.",
+  "stars": "7,042",
+  "date": "2026-07-22"
 }
