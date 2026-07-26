@@ -1,7 +1,7 @@
 {
-  "name": "ComposioHQ/awesome-claude-skills",
-  "url": "https://github.com/ComposioHQ/awesome-claude-skills",
-  "desc": "A curated list of awesome Claude Skills, resources, and tools for customizing Claude AI workflows",
-  "stars": "70,122",
-  "date": "2026-07-25"
+  "name": "alibaba/open-code-review",
+  "url": "https://github.com/alibaba/open-code-review",
+  "desc": "Open-source & free — Battle-tested at Alibaba's scale. Hybrid architecture code review tool: deterministic pipelines + LLM Agent, precise line-level comments, built-in fine-tuned ruleset (NPE, thread-safety, XSS, SQL injection), OpenAI & Anthropic compatible.",
+  "stars": "13,055",
+  "date": "2026-07-26"
 }
