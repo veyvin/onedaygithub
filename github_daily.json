@@ -1,7 +1,7 @@
 {
-  "name": "alibaba/open-code-review",
-  "url": "https://github.com/alibaba/open-code-review",
-  "desc": "Open-source & free — Battle-tested at Alibaba's scale. Hybrid architecture code review tool: deterministic pipelines + LLM Agent, precise line-level comments, built-in fine-tuned ruleset (NPE, thread-safety, XSS, SQL injection), OpenAI & Anthropic compatible.",
-  "stars": "13,055",
-  "date": "2026-07-26"
+  "name": "permissionlesstech/bitchat",
+  "url": "https://github.com/permissionlesstech/bitchat",
+  "desc": "bluetooth mesh chat, IRC vibes",
+  "stars": "30,615",
+  "date": "2026-07-27"
 }
