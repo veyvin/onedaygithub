@@ -1,7 +1,7 @@
 {
-  "name": "jenkinsci/jenkins",
-  "url": "https://github.com/jenkinsci/jenkins",
-  "desc": "Jenkins automation server",
-  "stars": "26,098",
-  "date": "2026-07-29"
+  "name": "opengeos/GeoLibre",
+  "url": "https://github.com/opengeos/GeoLibre",
+  "desc": "A lightweight, cloud-native GIS platform for visualizing, exploring, and analyzing geospatial data. It runs in the web browser, on the desktop, on mobile, and inside Jupyter notebooks.",
+  "stars": "4,117",
+  "date": "2026-07-30"
 }
