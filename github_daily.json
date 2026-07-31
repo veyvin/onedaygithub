@@ -1,7 +1,7 @@
 {
-  "name": "opengeos/GeoLibre",
-  "url": "https://github.com/opengeos/GeoLibre",
-  "desc": "A lightweight, cloud-native GIS platform for visualizing, exploring, and analyzing geospatial data. It runs in the web browser, on the desktop, on mobile, and inside Jupyter notebooks.",
-  "stars": "4,117",
-  "date": "2026-07-30"
+  "name": "huggingface/speech-to-speech",
+  "url": "https://github.com/huggingface/speech-to-speech",
+  "desc": "Build local voice agents with open-source models",
+  "stars": "9,065",
+  "date": "2026-07-31"
 }
