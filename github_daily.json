@@ -1,7 +1,7 @@
 {
-  "name": "lyogavin/airllm",
-  "url": "https://github.com/lyogavin/airllm",
-  "desc": "AirLLM 70B inference with single 4GB GPU",
-  "stars": "27,306",
-  "date": "2026-08-04"
+  "name": "cloudflare/computer",
+  "url": "https://github.com/cloudflare/computer",
+  "desc": "Give your agent a computer 👾",
+  "stars": "3,276",
+  "date": "2026-08-06"
 }
