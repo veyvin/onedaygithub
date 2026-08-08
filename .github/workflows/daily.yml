@@ -1,0 +1,139 @@
+name: Daily GitHub Trending
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 0 点执行
+  workflow_dispatch:  # 允许手动执行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: Debug - Check files before running scripts
+        run: |
+          echo "=== 初始文件状态 ==="
+          ls -la
+          if [ -f processed_repos.csv ]; then
+            echo "CSV 文件存在，内容:"
+            cat processed_repos.csv
+          else
+            echo "CSV 文件不存在"
+          fi
+
+      - name: Get trending repo and update CSV
+        id: get_trending
+        run: |
+          echo "=== 获取趋势仓库并更新 CSV ==="
+          python github_daily.py
+          
+          echo "=== 验证 CSV 更新 ==="
+          if [ -f processed_repos.csv ]; then
+            echo "CSV 文件内容:"
+            cat processed_repos.csv
+            echo "CSV 文件大小: $(wc -c < processed_repos.csv) 字节"
+          else
+            echo "错误: CSV 文件未创建"
+            exit 1
+          fi
+
+      - name: Commit CSV update immediately
+        run: |
+          echo "=== 立即提交 CSV 更新 ==="
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          
+          echo "当前分支: $(git branch --show-current)"
+          echo "文件状态:"
+          git status
+          
+          # 只添加 CSV 文件
+          git add processed_repos.csv
+          
+          if git diff --staged --quiet; then
+            echo "CSV 文件没有变化（可能已经提交）"
+          else
+            echo "提交 CSV 更新..."
+            git commit -m "Update processed repos CSV [skip ci]"
+            git push origin ${{ github.ref_name }}
+            echo "CSV 更新已提交到 ${{ github.ref_name }}"
+          fi
+
+      - name: Generate blog post with DeepSeek
+        id: generate_post
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          echo "=== 生成博客文章 ==="
+          python generate_post.py
+          if [ -f generated_post.json ]; then
+            echo "文章生成成功"
+          else
+            echo "错误: 文章生成失败"
+            exit 1
+          fi
+
+      - name: Publish to Halo
+        env:
+          HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
+        run: |
+          echo "=== 发布到 Halo ==="
+          python publish_to_halo.py
+
+      - name: Commit final changes
+        run: |
+          echo "=== 提交最终更改 ==="
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          
+          # 添加其他可能更改的文件
+          git add -A
+          git reset processed_repos.csv  # 排除已提交的 CSV 文件
+          
+          if git diff --staged --quiet; then
+            echo "没有其他需要提交的更改"
+          else
+            echo "提交最终更改..."
+            git commit -m "Auto-update: Generated post and other changes [skip ci]"
+            git push origin ${{ github.ref_name }}
+            echo "最终更改已提交到 ${{ github.ref_name }}"
+          fi
+
+      - name: Push to gh-pages
+        run: |
+          echo "=== 更新 gh-pages 分支 ==="
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          
+          # 切换到 gh-pages 分支
+          git checkout --orphan gh-pages
+          
+          # 复制需要的文件
+          if [ -f github_daily.json ]; then
+            cp github_daily.json index.json
+            git add index.json
+            git commit -m "Update daily trending data"
+            git push --force origin gh-pages
+            echo "gh-pages 分支已更新"
+          else
+            echo "错误: github_daily.json 文件不存在"
+            exit 1
+          fi
