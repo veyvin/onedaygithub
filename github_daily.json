@@ -1,7 +1,7 @@
 {
-  "name": "PrimeIntellect-ai/prime-agent",
-  "url": "https://github.com/PrimeIntellect-ai/prime-agent",
-  "desc": "A self-improving RLM agent for coding workflows and long-running autonomous tasks.",
-  "stars": "6,628",
-  "date": "2026-08-08"
+  "name": "google/skills",
+  "url": "https://github.com/google/skills",
+  "desc": "Agent Skills for Google products and technologies",
+  "stars": "16,759",
+  "date": "2026-08-09"
 }
