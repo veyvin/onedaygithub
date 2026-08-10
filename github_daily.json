@@ -1,7 +1,7 @@
 {
-  "name": "google/skills",
-  "url": "https://github.com/google/skills",
-  "desc": "Agent Skills for Google products and technologies",
-  "stars": "16,759",
-  "date": "2026-08-09"
+  "name": "vitali87/code-graph-rag",
+  "url": "https://github.com/vitali87/code-graph-rag",
+  "desc": "The ultimate RAG for your monorepo. Query, understand, and edit multi-language codebases with the power of AI and knowledge graphs",
+  "stars": "3,045",
+  "date": "2026-08-10"
 }
