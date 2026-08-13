@@ -1,7 +1,7 @@
 {
-  "name": "anthropics/skills",
-  "url": "https://github.com/anthropics/skills",
-  "desc": "Public repository for Agent Skills",
-  "stars": "168,172",
-  "date": "2026-08-12"
+  "name": "cathrynlavery/diagram-design",
+  "url": "https://github.com/cathrynlavery/diagram-design",
+  "desc": "29 editorial diagram types for Claude Code. Self-contained HTML + SVG. No shadows, no Mermaid-slop.",
+  "stars": "10,790",
+  "date": "2026-08-13"
 }
