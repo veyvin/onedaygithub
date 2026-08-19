@@ -1,7 +1,7 @@
 {
-  "name": "chaitanyagiri/munder-difflin",
-  "url": "https://github.com/chaitanyagiri/munder-difflin",
-  "desc": "local multi-agent harness",
-  "stars": "2,057",
+  "name": "jundot/omlx",
+  "url": "https://github.com/jundot/omlx",
+  "desc": "LLM inference server with continuous batching & SSD caching for Apple Silicon — managed from the macOS menu bar",
+  "stars": "19,730",
   "date": "2026-08-19"
 }
