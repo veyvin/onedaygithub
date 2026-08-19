@@ -217,7 +217,7 @@ class Example:
     }
     
     payload = {
-        "model": "deepseek-v4-pro",
+        "model": "deepseek-v4-flash",
         "messages": [
             {
                 "role": "user",
