@@ -1,7 +1,7 @@
 {
-  "name": "jundot/omlx",
-  "url": "https://github.com/jundot/omlx",
-  "desc": "LLM inference server with continuous batching & SSD caching for Apple Silicon — managed from the macOS menu bar",
-  "stars": "19,730",
-  "date": "2026-08-19"
+  "name": "modular/modular",
+  "url": "https://github.com/modular/modular",
+  "desc": "The Modular Platform (includes MAX & Mojo)",
+  "stars": "27,677",
+  "date": "2026-08-20"
 }
