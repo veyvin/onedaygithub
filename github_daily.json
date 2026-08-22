@@ -1,7 +1,7 @@
 {
-  "name": "AprilNEA/OpenLogi",
-  "url": "https://github.com/AprilNEA/OpenLogi",
-  "desc": "⚡️A native, local-first alternative to Logitech Options+, written in Rust 🦀 — remap buttons, DPI, and SmartShift over HID++. No account, no telemetry.",
-  "stars": "12,628",
-  "date": "2026-08-21"
+  "name": "openai/codex",
+  "url": "https://github.com/openai/codex",
+  "desc": "Lightweight coding agent that runs in your terminal",
+  "stars": "112,579",
+  "date": "2026-08-22"
 }
