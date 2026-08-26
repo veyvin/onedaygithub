@@ -1,7 +1,7 @@
 {
-  "name": "anthropics/claude-plugins-community",
-  "url": "https://github.com/anthropics/claude-plugins-community",
-  "desc": "Community plugin marketplace for Claude Cowork and Claude Code. Read-only mirror — submit plugins at clau.de/plugin-directory-submission.",
-  "stars": "1,617",
-  "date": "2026-08-25"
+  "name": "tt-a1i/archify",
+  "url": "https://github.com/tt-a1i/archify",
+  "desc": "Agent skill for beautiful, verifiable architecture, workflow, sequence, data-flow, and lifecycle diagrams—self-contained HTML with motion and crisp export.",
+  "stars": "17,312",
+  "date": "2026-08-26"
 }
