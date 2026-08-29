@@ -1,7 +1,7 @@
 {
-  "name": "JetBrains/go-modern-guidelines",
-  "url": "https://github.com/JetBrains/go-modern-guidelines",
-  "desc": "Help AI coding agents write modern Go",
-  "stars": "2,592",
+  "name": "abi/screenshot-to-code",
+  "url": "https://github.com/abi/screenshot-to-code",
+  "desc": "Drop in a screenshot and convert it to clean code (HTML/Tailwind/React/Vue)",
+  "stars": "75,954",
   "date": "2026-08-29"
 }
