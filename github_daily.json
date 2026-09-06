@@ -1,7 +1,7 @@
 {
-  "name": "humanlayer/skills",
-  "url": "https://github.com/humanlayer/skills",
-  "desc": "No description",
-  "stars": "2,607",
-  "date": "2026-09-05"
+  "name": "llvm/llvm-project",
+  "url": "https://github.com/llvm/llvm-project",
+  "desc": "The LLVM Project is a collection of modular and reusable compiler and toolchain technologies.",
+  "stars": "40,170",
+  "date": "2026-09-06"
 }
