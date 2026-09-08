@@ -91,19 +91,44 @@ def extract_title_and_content(full_content):
 
     return title, content
 
+# 模型提供商配置
+PROVIDERS = {
+    "deepseek": {
+        "api_url": "https://api.deepseek.com/chat/completions",
+        "api_key_env": "DEEPSEEK_API_KEY",
+        "model": "deepseek-v4-flash",
+        "auth_header": "Authorization",
+        "auth_prefix": "Bearer ",
+    },
+    "opencode-zen": {
+        "api_url": "https://opencode.ai/zen/v1/chat/completions",
+        "api_key_env": "OPENCODE_ZEN_API_KEY",
+        "model": "big-pickle",
+        "auth_header": "x-api-key",
+        "auth_prefix": "",
+    },
+}
+
+
 def generate_post_with_deepseek(repo_data):
-    """使用 DeepSeek API 生成博客文章"""
+    """使用大模型 API 生成博客文章（支持 DeepSeek 和 OpenCode Zen）"""
+
+    provider_name = os.getenv('MODEL_PROVIDER', 'deepseek')
+    provider = PROVIDERS.get(provider_name)
+    if not provider:
+        print(f"错误: 未知的 MODEL_PROVIDER '{provider_name}'，可选: {list(PROVIDERS.keys())}")
+        return None, None
 
     # 从环境变量获取 API 密钥
-    DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+    api_key = os.getenv(provider['api_key_env'])
 
-    if not DEEPSEEK_API_KEY:
-        print("错误: 未找到 DEEPSEEK_API_KEY 环境变量")
-        print("请在 GitHub Secrets 中设置 DEEPSEEK_API_KEY")
+    if not api_key:
+        print(f"错误: 未找到 {provider['api_key_env']} 环境变量")
+        print(f"请在 GitHub Secrets 中设置 {provider['api_key_env']}")
         return None, None
 
     # 仅打印长度用于诊断，避免泄露 API Key 内容
-    print(f"已检测到 DEEPSEEK_API_KEY (长度: {len(DEEPSEEK_API_KEY)})")
+    print(f"模型提供商: {provider_name} | 模型: {provider['model']} | API Key 长度: {len(api_key)}")
 
     # 验证仓库必需字段，避免 KeyError 导致整段失败
     name = repo_data.get('name')
@@ -114,7 +139,7 @@ def generate_post_with_deepseek(repo_data):
         print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
         return None, None
 
-    DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+    API_URL = provider['api_url']
 
     # 根据项目名称生成一个稳定种子，用于选择不同的文章结构
     seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
@@ -227,11 +252,11 @@ class Example:
     
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}"
+        provider['auth_header']: f"{provider['auth_prefix']}{api_key}"
     }
-    
+
     payload = {
-        "model": "deepseek-v4-flash",
+        "model": provider['model'],
         "messages": [
             {
                 "role": "user",
@@ -244,8 +269,8 @@ class Example:
     }
     
     try:
-        print("正在调用 DeepSeek API...")
-        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=60)
+        print(f"正在调用 {provider_name} API...")
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         print(f"API 响应状态码: {response.status_code}")
         
         if response.status_code == 200:
@@ -267,7 +292,7 @@ class Example:
             
             return title, content
         else:
-            print(f"DeepSeek API 错误: {response.status_code}")
+            print(f"API 错误: {response.status_code}")
             print(f"错误详情: {response.text}")
             return None, None
             
