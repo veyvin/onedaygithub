@@ -108,12 +108,9 @@ PROVIDERS = {
         "auth_prefix": "",
     },
     "cursor": {
-        "api_url_env": "CURSOR_API_URL",
-        "api_url_default": "http://localhost:8080/v1/chat/completions",
         "api_key_env": "CURSOR_API_KEY",
         "model": "composer-2.5",
-        "auth_header": "Authorization",
-        "auth_prefix": "Bearer ",
+        "use_sdk": True,
     },
     "sub2api": {
         "api_url_env": "SUB2API_API_URL",
@@ -126,77 +123,44 @@ PROVIDERS = {
 }
 
 
-def generate_post_with_deepseek(repo_data):
-    """使用大模型 API 生成博客文章（支持 DeepSeek 和 OpenCode Zen）"""
-
-    provider_name = os.getenv('MODEL_PROVIDER', 'deepseek')
-    provider = PROVIDERS.get(provider_name)
-    if not provider:
-        print(f"错误: 未知的 MODEL_PROVIDER '{provider_name}'，可选: {list(PROVIDERS.keys())}")
-        return None, None
-
-    # 从环境变量获取 API 密钥
-    api_key = os.getenv(provider['api_key_env'])
-
-    if not api_key:
-        print(f"错误: 未找到 {provider['api_key_env']} 环境变量")
-        print(f"请在 GitHub Secrets 中设置 {provider['api_key_env']}")
-        return None, None
-
-    # 仅打印长度用于诊断，避免泄露 API Key 内容
-    print(f"模型提供商: {provider_name} | 模型: {provider['model']} | API Key 长度: {len(api_key)}")
-
-    # 验证仓库必需字段，避免 KeyError 导致整段失败
+def _build_prompt(repo_data):
+    """构建博客文章的提示词，供所有提供商共用。"""
     name = repo_data.get('name')
     url = repo_data.get('url')
     desc = repo_data.get('desc') or 'No description'
     date = repo_data.get('date')
-    if not name or not url or not date:
-        print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
-        return None, None
 
-    API_URL = os.getenv(provider.get('api_url_env', ''), provider.get('api_url_default', provider.get('api_url', '')))
-
-    # 根据项目名称生成一个稳定种子，用于选择不同的文章结构
     seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
-    
-    # 多样化的文章结构模板（根据 seed 选择不同的结构）
+
     structure_templates = [
-        # 结构1: 故事型 - 从问题出发引出项目
         {
             "intro": "从一个实际开发场景或痛点开始，然后引出这个项目如何解决这个问题",
             "structure": ["引人入胜的开头（故事/问题场景）", "项目登场：如何解决这个问题", "核心功能深度解析", "技术亮点和创新点", "实战体验和使用建议", "总结：为什么值得关注"]
         },
-        # 结构2: 对比型 - 与同类工具对比
         {
             "intro": "对比这个项目与同类工具/框架的差异，突出其独特价值",
             "structure": ["项目背景：为什么需要它", "与同类方案的对比分析", "核心优势解析", "技术实现亮点", "适用场景和局限性", "总结：什么时候选择它"]
         },
-        # 结构3: 技术深度型 - 深入技术实现
         {
             "intro": "聚焦技术实现细节，适合技术导向的项目",
             "structure": ["项目概述和技术背景", "架构设计解析", "关键技术实现细节", "性能优化和设计亮点", "开发者视角的使用体验", "技术栈总结和启发"]
         },
-        # 结构4: 场景驱动型 - 从应用场景出发
         {
             "intro": "从实际应用场景出发，展示项目的实用价值",
             "structure": ["实际应用场景介绍", "项目如何解决这些场景需求", "功能特性详解", "快速上手指南", "进阶使用技巧", "场景总结和扩展思考"]
         },
-        # 结构5: 探索发现型 - 探索性分析
         {
             "intro": "以探索和发现的视角，逐步深入项目的各个方面",
             "structure": ["发现这个项目：第一印象", "深入探索：核心功能", "技术揭秘：实现原理", "实际测试：使用体验", "发现亮点：独特之处", "探索总结：值得学习的点"]
         },
-        # 结构6: 问题解决型 - 从痛点出发
         {
             "intro": "从开发者常见的痛点出发，展示项目的解决方案",
             "structure": ["开发者痛点分析", "项目如何解决这些问题", "解决方案详解", "最佳实践和使用建议", "潜在问题和注意事项", "总结：解决问题的价值"]
         }
     ]
-    
+
     selected_structure = structure_templates[seed]
-    
-    # 构建更灵活的提示词
+
     prompt = f"""
 请为今天的 GitHub Trending 每日推荐项目写一篇技术博客文章。
 
@@ -265,6 +229,98 @@ class Example:
 文章标题（第一行，不要HTML标签）
 <html内容>（从第二行开始）
 """
+    return prompt
+
+
+def generate_post_with_cursor_sdk(repo_data, provider):
+    """使用 Cursor Python SDK 生成博客文章（直接调用，无需代理）"""
+    api_key = os.getenv(provider['api_key_env'])
+    if not api_key:
+        print(f"错误: 未找到 {provider['api_key_env']} 环境变量")
+        print(f"请在 GitHub Secrets 中设置 {provider['api_key_env']}")
+        return None, None
+
+    name = repo_data.get('name')
+    url = repo_data.get('url')
+    date = repo_data.get('date')
+    if not name or not url or not date:
+        print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
+        return None, None
+
+    print(f"模型提供商: cursor | 模型: {provider['model']} | API Key 长度: {len(api_key)}")
+
+    prompt = _build_prompt(repo_data)
+
+    try:
+        from cursor_sdk import Agent, CloudAgentOptions
+    except ImportError:
+        print("错误: 未安装 cursor-sdk 包，请运行 pip install cursor-sdk")
+        return None, None
+
+    try:
+        print("正在调用 Cursor SDK...")
+        # 使用无仓库的云端 Agent，仅用于文本生成
+        with Agent.create(
+            model=provider['model'],
+            api_key=api_key,
+            cloud=CloudAgentOptions(repos=[]),
+        ) as agent:
+            run = agent.send(prompt)
+            raw_content = run.wait().text()
+
+        # 提取标题和内容
+        title, content = extract_title_and_content(raw_content)
+
+        if not title:
+            title = f"GitHub Trending 推荐：{name}"
+
+        content = format_code_blocks(content)
+
+        print(f"提取的标题: {title}")
+        print(f"内容预览: {content[:100]}...")
+
+        return title, content
+    except Exception as e:
+        print(f"Cursor SDK 错误: {e}")
+        traceback.print_exc()
+        return None, None
+
+
+def generate_post_with_deepseek(repo_data):
+    """使用大模型 API 生成博客文章（支持 DeepSeek、OpenCode Zen、Cursor SDK、Sub2API）"""
+
+    provider_name = os.getenv('MODEL_PROVIDER', 'deepseek')
+    provider = PROVIDERS.get(provider_name)
+    if not provider:
+        print(f"错误: 未知的 MODEL_PROVIDER '{provider_name}'，可选: {list(PROVIDERS.keys())}")
+        return None, None
+
+    # Cursor SDK 走单独的代码路径
+    if provider.get('use_sdk'):
+        return generate_post_with_cursor_sdk(repo_data, provider)
+
+    # 从环境变量获取 API 密钥
+    api_key = os.getenv(provider['api_key_env'])
+
+    if not api_key:
+        print(f"错误: 未找到 {provider['api_key_env']} 环境变量")
+        print(f"请在 GitHub Secrets 中设置 {provider['api_key_env']}")
+        return None, None
+
+    # 仅打印长度用于诊断，避免泄露 API Key 内容
+    print(f"模型提供商: {provider_name} | 模型: {provider['model']} | API Key 长度: {len(api_key)}")
+
+    # 验证仓库必需字段，避免 KeyError 导致整段失败
+    name = repo_data.get('name')
+    url = repo_data.get('url')
+    date = repo_data.get('date')
+    if not name or not url or not date:
+        print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
+        return None, None
+
+    API_URL = os.getenv(provider.get('api_url_env', ''), provider.get('api_url_default', provider.get('api_url', '')))
+
+    prompt = _build_prompt(repo_data)
     
     headers = {
         "Content-Type": "application/json",

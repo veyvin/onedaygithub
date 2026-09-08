@@ -38,13 +38,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          if [ "${{ github.event.inputs.provider || 'deepseek' }}" = "cursor" ]; then
+            echo "安装 cursor-sdk..."
+            pip install cursor-sdk
+          fi
 
       - name: Validate required secrets
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-          CURSOR_API_URL: ${{ secrets.CURSOR_API_URL }}
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
@@ -66,12 +69,6 @@ jobs:
               missing=1
             else
               echo "✅ CURSOR_API_KEY 已配置 (长度: ${#CURSOR_API_KEY})"
-            fi
-            if [ -z "$CURSOR_API_URL" ]; then
-              echo "⚠️ 未设置 CURSOR_API_URL，将使用默认地址 http://localhost:8080/v1/chat/completions"
-              echo "⚠️ 注意：GitHub Actions 中 localhost 不可用，请设置 CURSOR_API_URL 为你的代理地址"
-            else
-              echo "✅ CURSOR_API_URL 已配置"
             fi
           elif [ "$MODEL_PROVIDER" = "sub2api" ]; then
             if [ -z "$SUB2API_API_KEY" ]; then
@@ -125,7 +122,6 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-          CURSOR_API_URL: ${{ secrets.CURSOR_API_URL }}
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
