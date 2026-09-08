@@ -14,6 +14,7 @@ on:
           - deepseek
           - opencode-zen
           - cursor
+          - sub2api
 
 jobs:
   build:
@@ -44,6 +45,8 @@ jobs:
           OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           CURSOR_API_URL: ${{ secrets.CURSOR_API_URL }}
+          SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
+          SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
         run: |
@@ -69,6 +72,20 @@ jobs:
               echo "⚠️ 注意：GitHub Actions 中 localhost 不可用，请设置 CURSOR_API_URL 为你的代理地址"
             else
               echo "✅ CURSOR_API_URL 已配置"
+            fi
+          elif [ "$MODEL_PROVIDER" = "sub2api" ]; then
+            if [ -z "$SUB2API_API_KEY" ]; then
+              echo "❌ 缺少 SUB2API_API_KEY secret"
+              missing=1
+            else
+              echo "✅ SUB2API_API_KEY 已配置 (长度: ${#SUB2API_API_KEY})"
+            fi
+            if [ -z "$SUB2API_API_URL" ]; then
+              echo "❌ 缺少 SUB2API_API_URL secret"
+              echo "请设置为你的 Sub2API 站点地址，如 https://your-domain.com/v1/chat/completions"
+              missing=1
+            else
+              echo "✅ SUB2API_API_URL 已配置"
             fi
           else
             if [ -z "$DEEPSEEK_API_KEY" ]; then
@@ -109,6 +126,8 @@ jobs:
           OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           CURSOR_API_URL: ${{ secrets.CURSOR_API_URL }}
+          SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
+          SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-deepseek}) ==="

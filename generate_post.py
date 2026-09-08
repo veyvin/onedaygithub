@@ -115,6 +115,14 @@ PROVIDERS = {
         "auth_header": "Authorization",
         "auth_prefix": "Bearer ",
     },
+    "sub2api": {
+        "api_url_env": "SUB2API_API_URL",
+        "api_url_default": "http://localhost:18080/v1/chat/completions",
+        "api_key_env": "SUB2API_API_KEY",
+        "model": "gpt-5.4",
+        "auth_header": "Authorization",
+        "auth_prefix": "Bearer ",
+    },
 }
 
 
