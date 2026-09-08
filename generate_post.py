@@ -103,7 +103,7 @@ PROVIDERS = {
     "opencode-zen": {
         "api_url": "https://opencode.ai/zen/v1/chat/completions",
         "api_key_env": "OPENCODE_ZEN_API_KEY",
-        "model": "muse-spark-1.3-contributor-free",
+        "model": "big-pickle",
         "auth_header": "x-api-key",
         "auth_prefix": "",
     },
