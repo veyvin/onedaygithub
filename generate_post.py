@@ -107,6 +107,14 @@ PROVIDERS = {
         "auth_header": "x-api-key",
         "auth_prefix": "",
     },
+    "cursor": {
+        "api_url_env": "CURSOR_API_URL",
+        "api_url_default": "http://localhost:8080/v1/chat/completions",
+        "api_key_env": "CURSOR_API_KEY",
+        "model": "composer-2.5",
+        "auth_header": "Authorization",
+        "auth_prefix": "Bearer ",
+    },
 }
 
 
@@ -139,7 +147,7 @@ def generate_post_with_deepseek(repo_data):
         print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
         return None, None
 
-    API_URL = provider['api_url']
+    API_URL = os.getenv(provider.get('api_url_env', ''), provider.get('api_url_default', provider.get('api_url', '')))
 
     # 根据项目名称生成一个稳定种子，用于选择不同的文章结构
     seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6

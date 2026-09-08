@@ -13,6 +13,7 @@ on:
         options:
           - deepseek
           - opencode-zen
+          - cursor
 
 jobs:
   build:
@@ -41,6 +42,8 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          CURSOR_API_URL: ${{ secrets.CURSOR_API_URL }}
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
         run: |
@@ -53,6 +56,19 @@ jobs:
               missing=1
             else
               echo "✅ OPENCODE_ZEN_API_KEY 已配置 (长度: ${#OPENCODE_ZEN_API_KEY})"
+            fi
+          elif [ "$MODEL_PROVIDER" = "cursor" ]; then
+            if [ -z "$CURSOR_API_KEY" ]; then
+              echo "❌ 缺少 CURSOR_API_KEY secret"
+              missing=1
+            else
+              echo "✅ CURSOR_API_KEY 已配置 (长度: ${#CURSOR_API_KEY})"
+            fi
+            if [ -z "$CURSOR_API_URL" ]; then
+              echo "⚠️ 未设置 CURSOR_API_URL，将使用默认地址 http://localhost:8080/v1/chat/completions"
+              echo "⚠️ 注意：GitHub Actions 中 localhost 不可用，请设置 CURSOR_API_URL 为你的代理地址"
+            else
+              echo "✅ CURSOR_API_URL 已配置"
             fi
           else
             if [ -z "$DEEPSEEK_API_KEY" ]; then
@@ -91,6 +107,8 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENCODE_ZEN_API_KEY: ${{ secrets.OPENCODE_ZEN_API_KEY }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          CURSOR_API_URL: ${{ secrets.CURSOR_API_URL }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-deepseek}) ==="
