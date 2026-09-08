@@ -1,7 +1,7 @@
 {
-  "name": "llvm/llvm-project",
-  "url": "https://github.com/llvm/llvm-project",
-  "desc": "The LLVM Project is a collection of modular and reusable compiler and toolchain technologies.",
-  "stars": "40,170",
-  "date": "2026-09-06"
+  "name": "heygen-com/hyperframes",
+  "url": "https://github.com/heygen-com/hyperframes",
+  "desc": "Write HTML. Render video. Built for agents.",
+  "stars": "46,080",
+  "date": "2026-09-08"
 }
