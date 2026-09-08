@@ -1,7 +1,7 @@
 {
-  "name": "heygen-com/hyperframes",
-  "url": "https://github.com/heygen-com/hyperframes",
-  "desc": "Write HTML. Render video. Built for agents.",
-  "stars": "46,080",
+  "name": "mksglu/context-mode",
+  "url": "https://github.com/mksglu/context-mode",
+  "desc": "Context window optimization for AI coding agents. Sandboxes tool output (98% reduction), persists session memory, and enforces routing across 17 platforms via MCP + hooks.",
+  "stars": "20,899",
   "date": "2026-09-08"
 }
