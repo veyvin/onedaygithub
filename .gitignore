@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# 敏感信息
+.env
+.env.local
+*.pem
+*.key
+
+# 编辑器/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 运行时产物（这些文件由工作流自动生成并提交，本地运行时忽略）
+generated_post.json
+github_daily.json

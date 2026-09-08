@@ -1,8 +1,17 @@
 import json
 import requests
 import os
-from datetime import datetime
+import hashlib
 import re
+import traceback
+from datetime import datetime
+
+# BeautifulSoup 是必需依赖（见 requirements.txt），但保留可选降级路径
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
+    print("警告: 未安装 BeautifulSoup，HTML 解析将退化为正则表达式")
 
 def read_repo_data():
     """读取 GitHub Trending 数据"""
@@ -25,22 +34,22 @@ def format_code_blocks(content):
         content,
         flags=re.DOTALL
     )
-    
+
     # 处理行内代码 `code`
     content = re.sub(r'`([^`]+)`', r'<code>\1</code>', content)
-    
+
     return content
 
 def extract_title_and_content(full_content):
     """从 API 返回的内容中提取标题和正文"""
-    
+    stripped = full_content.strip()
+
     # 如果内容以 <!DOCTYPE 开头，说明返回了完整 HTML 文档
-    if full_content.strip().startswith('<!DOCTYPE') or full_content.strip().startswith('<html'):
-        # 使用 BeautifulSoup 解析 HTML
-        try:
-            from bs4 import BeautifulSoup
+    if stripped.startswith('<!DOCTYPE') or stripped.startswith('<html'):
+        if BeautifulSoup is not None:
+            # 使用 BeautifulSoup 解析 HTML
             soup = BeautifulSoup(full_content, 'html.parser')
-            
+
             # 提取标题 - 优先找 h1，如果没有就找 title
             title_tag = soup.find('h1')
             if title_tag:
@@ -48,62 +57,67 @@ def extract_title_and_content(full_content):
             else:
                 title_tag = soup.find('title')
                 title = title_tag.get_text().strip() if title_tag else ""
-            
+
             # 提取正文 - 找 body 或者直接取所有内容
             body_tag = soup.find('body')
-            if body_tag:
-                content = str(body_tag)
-            else:
-                content = full_content
-                
+            content = str(body_tag) if body_tag else full_content
+
             return title, content
-            
-        except ImportError:
-            # 如果没有 BeautifulSoup，使用正则表达式简单处理
+        else:
+            # 没有安装 BeautifulSoup，使用正则表达式简单处理
             print("警告: 未安装 BeautifulSoup，使用正则表达式提取内容")
             title_match = re.search(r'<title[^>]*>(.*?)</title>', full_content, re.IGNORECASE | re.DOTALL)
             title = title_match.group(1).strip() if title_match else ""
-            
+
             body_match = re.search(r'<body[^>]*>(.*?)</body>', full_content, re.IGNORECASE | re.DOTALL)
             content = body_match.group(1) if body_match else full_content
-            
+
             return title, content
-    else:
-        # 如果不是完整 HTML，尝试提取第一行作为标题
-        lines = full_content.strip().split('\n')
-        title = ""
-        content = full_content
-        
-        # 找第一个有意义的行作为标题
-        for line in lines:
-            clean_line = line.strip()
-            if clean_line and len(clean_line) < 100:  # 标题不会太长
-                # 移除 HTML 标签
-                clean_title = re.sub(r'<[^>]+>', '', clean_line)
-                if clean_title and len(clean_title) > 5:
-                    title = clean_title
-                    break
-        
-        return title, content
+
+    # 非完整 HTML：尝试提取第一行作为标题
+    lines = full_content.strip().split('\n')
+    title = ""
+    content = full_content
+
+    # 找第一个有意义的行作为标题
+    for line in lines:
+        clean_line = line.strip()
+        if clean_line and len(clean_line) < 100:  # 标题不会太长
+            # 移除 HTML 标签
+            clean_title = re.sub(r'<[^>]+>', '', clean_line)
+            if clean_title and len(clean_title) > 5:
+                title = clean_title
+                break
+
+    return title, content
 
 def generate_post_with_deepseek(repo_data):
     """使用 DeepSeek API 生成博客文章"""
-    
+
     # 从环境变量获取 API 密钥
     DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
-    
+
     if not DEEPSEEK_API_KEY:
         print("错误: 未找到 DEEPSEEK_API_KEY 环境变量")
         print("请在 GitHub Secrets 中设置 DEEPSEEK_API_KEY")
         return None, None
-    
-    print(f"API Key 前几位: {DEEPSEEK_API_KEY[:10]}...")
-    
+
+    # 仅打印长度用于诊断，避免泄露 API Key 内容
+    print(f"已检测到 DEEPSEEK_API_KEY (长度: {len(DEEPSEEK_API_KEY)})")
+
+    # 验证仓库必需字段，避免 KeyError 导致整段失败
+    name = repo_data.get('name')
+    url = repo_data.get('url')
+    desc = repo_data.get('desc') or 'No description'
+    date = repo_data.get('date')
+    if not name or not url or not date:
+        print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
+        return None, None
+
     DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
-    
-    # 根据项目名称生成一个随机种子，用于选择不同的文章结构
-    import hashlib
-    seed = int(hashlib.md5(repo_data['name'].encode()).hexdigest()[:8], 16) % 6
+
+    # 根据项目名称生成一个稳定种子，用于选择不同的文章结构
+    seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
     
     # 多样化的文章结构模板（根据 seed 选择不同的结构）
     structure_templates = [
@@ -146,10 +160,10 @@ def generate_post_with_deepseek(repo_data):
 请为今天的 GitHub Trending 每日推荐项目写一篇技术博客文章。
 
 项目信息：
-- 项目名称：{repo_data['name']}
-- 项目地址：{repo_data['url']}
-- 项目描述：{repo_data['desc']}
-- 推荐日期：{repo_data['date']}
+- 项目名称：{name}
+- 项目地址：{url}
+- 项目描述：{desc}
+- 推荐日期：{date}
 
 🎯 写作策略（重要！）：
 根据项目特点，选择最适合的文章结构。不要使用固定模板，要让每篇文章都有独特的风格和视角。
@@ -243,7 +257,7 @@ class Example:
             
             # 如果提取失败，使用默认标题
             if not title:
-                title = f"GitHub Trending 推荐：{repo_data['name']}"
+                title = f"GitHub Trending 推荐：{name}"
             
             # 格式化代码块 - 将 ``` 转换为 HTML
             content = format_code_blocks(content)
@@ -311,7 +325,7 @@ if __name__ == "__main__":
         print("无法读取仓库数据，退出")
         exit(1)
         
-    print(f"处理项目: {repo_data['name']}")
+    print(f"处理项目: {repo_data.get('name', 'unknown')}")
     
     # 生成文章
     title, content = generate_post_with_deepseek(repo_data)
