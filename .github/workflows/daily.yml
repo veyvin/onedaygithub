@@ -15,6 +15,11 @@ on:
           - opencode-zen
           - cursor
           - sub2api
+      model:
+        description: '模型名称（可选，留空使用各提供商默认模型，sub2api 建议填写）'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   build:
@@ -125,6 +130,7 @@ jobs:
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
+          MODEL_NAME: ${{ github.event.inputs.model || '' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-deepseek}) ==="
           python generate_post.py

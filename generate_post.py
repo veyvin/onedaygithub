@@ -123,6 +123,12 @@ PROVIDERS = {
 }
 
 
+def _resolve_model(provider):
+    """解析实际使用的模型名：优先使用 MODEL_NAME 环境变量，否则用 provider 默认值。"""
+    override = os.getenv('MODEL_NAME', '').strip()
+    return override or provider.get('model')
+
+
 def _build_prompt(repo_data):
     """构建博客文章的提示词，供所有提供商共用。"""
     name = repo_data.get('name')
@@ -247,7 +253,8 @@ def generate_post_with_cursor_sdk(repo_data, provider):
         print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
         return None, None
 
-    print(f"模型提供商: cursor | 模型: {provider['model']} | API Key 长度: {len(api_key)}")
+    model = _resolve_model(provider)
+    print(f"模型提供商: cursor | 模型: {model} | API Key 长度: {len(api_key)}")
 
     prompt = _build_prompt(repo_data)
 
@@ -261,7 +268,7 @@ def generate_post_with_cursor_sdk(repo_data, provider):
         print("正在调用 Cursor SDK...")
         # 使用无仓库的云端 Agent，仅用于文本生成
         with Agent.create(
-            model=provider['model'],
+            model=model,
             api_key=api_key,
             cloud=CloudAgentOptions(repos=[]),
         ) as agent:
@@ -308,7 +315,8 @@ def generate_post_with_deepseek(repo_data):
         return None, None
 
     # 仅打印长度用于诊断，避免泄露 API Key 内容
-    print(f"模型提供商: {provider_name} | 模型: {provider['model']} | API Key 长度: {len(api_key)}")
+    model = _resolve_model(provider)
+    print(f"模型提供商: {provider_name} | 模型: {model} | API Key 长度: {len(api_key)}")
 
     # 验证仓库必需字段，避免 KeyError 导致整段失败
     name = repo_data.get('name')
@@ -328,7 +336,7 @@ def generate_post_with_deepseek(repo_data):
     }
 
     payload = {
-        "model": provider['model'],
+        "model": model,
         "messages": [
             {
                 "role": "user",
