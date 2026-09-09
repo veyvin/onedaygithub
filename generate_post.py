@@ -120,6 +120,13 @@ PROVIDERS = {
         "auth_header": "Authorization",
         "auth_prefix": "Bearer ",
     },
+    "commandcode": {
+        "api_url": "https://api.commandcode.ai/provider/v1/chat/completions",
+        "api_key_env": "COMMANDCODE_API_KEY",
+        "model": "deepseek/deepseek-v4-flash",
+        "auth_header": "Authorization",
+        "auth_prefix": "Bearer ",
+    },
 }
 
 

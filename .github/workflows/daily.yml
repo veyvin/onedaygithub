@@ -15,6 +15,7 @@ on:
           - opencode-zen
           - cursor
           - sub2api
+          - commandcode
       model:
         description: '模型名称（可选，留空使用各提供商默认模型，sub2api 建议填写）'
         required: false
@@ -55,6 +56,7 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
+          COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
         run: |
@@ -88,6 +90,14 @@ jobs:
               missing=1
             else
               echo "✅ SUB2API_API_URL 已配置"
+            fi
+          elif [ "$MODEL_PROVIDER" = "commandcode" ]; then
+            if [ -z "$COMMANDCODE_API_KEY" ]; then
+              echo "❌ 缺少 COMMANDCODE_API_KEY secret"
+              echo "请前往 https://commandcode.ai/settings/api-keys 创建 API Key"
+              missing=1
+            else
+              echo "✅ COMMANDCODE_API_KEY 已配置 (长度: ${#COMMANDCODE_API_KEY})"
             fi
           else
             if [ -z "$DEEPSEEK_API_KEY" ]; then
@@ -129,6 +139,7 @@ jobs:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
+          COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
           MODEL_NAME: ${{ github.event.inputs.model || '' }}
         run: |
