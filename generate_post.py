@@ -74,25 +74,21 @@ def extract_title_and_content(full_content):
 
             return title, content
 
-    # 非完整 HTML：第一行应为纯文本标题
+
+    # 非完整 HTML：尝试提取第一行作为标题
     lines = full_content.strip().split('\n')
     title = ""
     content = full_content
 
-    # 第一行即为标题（按 prompt 要求）
-    if lines:
-        first_line = lines[0].strip()
-        clean_title = re.sub(r'<[^>]+>', '', first_line).strip()
-        # 标题长度合理（5-200 字符），认为是标题
-        if clean_title and 5 <= len(clean_title) <= 200:
+    # 找第一个有意义的行作为标题
+    for line in lines:
+        clean_line = line.strip()
+        if clean_line and len(clean_line) < 100:  # 标题不会太长
+            # 移除 HTML 标签
+            clean_title = re.sub(r'<[^>]+>', '', clean_line)
+            if clean_title and len(clean_title) > 5:
                 title = clean_title
-            # 正文从第二行开始
-            content = '\n'.join(lines[1:]).strip()
-        else:
-            # 第一行不是标题，尝试从正文 HTML 中提取 h1/h2
-            h_match = re.search(r'<h[12][^>]*>(.*?)</h[12]>', full_content, re.IGNORECASE | re.DOTALL)
-            if h_match:
-                title = re.sub(r'<[^>]+>', '', h_match.group(1)).strip()
+                break
 
     return title, content
 
