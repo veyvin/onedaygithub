@@ -1,9 +1,9 @@
 {
-  "name": "browser-use/browser-use",
-  "url": "https://github.com/browser-use/browser-use",
-  "desc": "Agents that use the browser.",
-  "stars": "113,850",
-  "language": "Python",
+  "name": "Tencent/teamai-cli",
+  "url": "https://github.com/Tencent/teamai-cli",
+  "desc": "Make Every Team AI Native",
+  "stars": "2,592",
+  "language": "TypeScript",
   "today_stars": "N/A",
   "date": "2026-09-09"
 }
