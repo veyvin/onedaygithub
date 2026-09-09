@@ -68,10 +68,11 @@ def test_extract_title_and_content_falls_back_to_title_tag():
 
 def test_extract_title_and_content_from_plain_text():
     # 标题需 > 5 个字符才会被采纳（见 extract_title_and_content 中的过滤逻辑）
+    # 标题被识别后，正文从第二行开始（去掉标题行），首部空行会被 strip
     text = "这是一个比较长的标题\n\n<p>这是正文</p>"
     title, content = extract_title_and_content(text)
     assert title == "这是一个比较长的标题"
-    assert content == text
+    assert content == "<p>这是正文</p>"
 
 
 def test_extract_title_and_content_empty_input():

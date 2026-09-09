@@ -109,6 +109,22 @@ def _fetch_with_retry(url, headers, timeout=30, max_retries=MAX_RETRIES, delay=R
     return last_response
 
 
+def _extract_repo_language(repo):
+    """从 trending 页面条目中提取项目主语言。"""
+    lang_tag = repo.find("span", itemprop="programmingLanguage")
+    if lang_tag:
+        return lang_tag.get_text(strip=True)
+    return "N/A"
+
+
+def _extract_today_stars(repo):
+    """从 trending 页面条目中提取今日新增 star 数。"""
+    today_tag = repo.find("span", class_="d-inline-none float-sm-right")
+    if today_tag:
+        return today_tag.get_text(strip=True)
+    return "N/A"
+
+
 def get_trending_repos():
     """获取所有趋势仓库"""
     url = "https://github.com/trending"
@@ -147,6 +163,8 @@ def get_trending_repos():
                     "url": repo_url,
                     "desc": repo_desc,
                     "stars": stars,
+                    "language": _extract_repo_language(repo),
+                    "today_stars": _extract_today_stars(repo),
                     "date": datetime.now().strftime("%Y-%m-%d")
                 })
             except Exception as e:

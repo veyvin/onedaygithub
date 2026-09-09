@@ -1,7 +1,6 @@
 import json
 import requests
 import os
-import hashlib
 import re
 import traceback
 from datetime import datetime
@@ -74,20 +73,25 @@ def extract_title_and_content(full_content):
 
             return title, content
 
-    # 非完整 HTML：尝试提取第一行作为标题
+    # 非完整 HTML：第一行应为纯文本标题
     lines = full_content.strip().split('\n')
     title = ""
     content = full_content
 
-    # 找第一个有意义的行作为标题
-    for line in lines:
-        clean_line = line.strip()
-        if clean_line and len(clean_line) < 100:  # 标题不会太长
-            # 移除 HTML 标签
-            clean_title = re.sub(r'<[^>]+>', '', clean_line)
-            if clean_title and len(clean_title) > 5:
-                title = clean_title
-                break
+    # 第一行即为标题（按 prompt 要求）
+    if lines:
+        first_line = lines[0].strip()
+        clean_title = re.sub(r'<[^>]+>', '', first_line).strip()
+        # 标题长度合理（5-200 字符），认为是标题
+        if clean_title and 5 <= len(clean_title) <= 200:
+            title = clean_title
+            # 正文从第二行开始
+            content = '\n'.join(lines[1:]).strip()
+        else:
+            # 第一行不是标题，尝试从正文 HTML 中提取 h1/h2
+            h_match = re.search(r'<h[12][^>]*>(.*?)</h[12]>', full_content, re.IGNORECASE | re.DOTALL)
+            if h_match:
+                title = re.sub(r'<[^>]+>', '', h_match.group(1)).strip()
 
     return title, content
 
@@ -140,96 +144,44 @@ def _build_prompt(repo_data):
     """构建博客文章的提示词，供所有提供商共用。"""
     name = repo_data.get('name')
     url = repo_data.get('url')
-    desc = repo_data.get('desc') or 'No description'
+    desc = repo_data.get('desc') or '暂无描述'
     date = repo_data.get('date')
-
-    seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
-
-    structure_templates = [
-        {
-            "intro": "从一个实际开发场景或痛点开始，然后引出这个项目如何解决这个问题",
-            "structure": ["引人入胜的开头（故事/问题场景）", "项目登场：如何解决这个问题", "核心功能深度解析", "技术亮点和创新点", "实战体验和使用建议", "总结：为什么值得关注"]
-        },
-        {
-            "intro": "对比这个项目与同类工具/框架的差异，突出其独特价值",
-            "structure": ["项目背景：为什么需要它", "与同类方案的对比分析", "核心优势解析", "技术实现亮点", "适用场景和局限性", "总结：什么时候选择它"]
-        },
-        {
-            "intro": "聚焦技术实现细节，适合技术导向的项目",
-            "structure": ["项目概述和技术背景", "架构设计解析", "关键技术实现细节", "性能优化和设计亮点", "开发者视角的使用体验", "技术栈总结和启发"]
-        },
-        {
-            "intro": "从实际应用场景出发，展示项目的实用价值",
-            "structure": ["实际应用场景介绍", "项目如何解决这些场景需求", "功能特性详解", "快速上手指南", "进阶使用技巧", "场景总结和扩展思考"]
-        },
-        {
-            "intro": "以探索和发现的视角，逐步深入项目的各个方面",
-            "structure": ["发现这个项目：第一印象", "深入探索：核心功能", "技术揭秘：实现原理", "实际测试：使用体验", "发现亮点：独特之处", "探索总结：值得学习的点"]
-        },
-        {
-            "intro": "从开发者常见的痛点出发，展示项目的解决方案",
-            "structure": ["开发者痛点分析", "项目如何解决这些问题", "解决方案详解", "最佳实践和使用建议", "潜在问题和注意事项", "总结：解决问题的价值"]
-        }
-    ]
-
-    selected_structure = structure_templates[seed]
+    stars = repo_data.get('stars', 'N/A')
+    language = repo_data.get('language', 'N/A')
+    today_stars = repo_data.get('today_stars', 'N/A')
 
     prompt = f"""
-请为今天的 GitHub Trending 每日推荐项目写一篇技术博客文章。
+请为今天的 GitHub Trending 每日推荐项目写一篇中文技术博客文章。
 
-项目信息：
+项目信息（仅基于以下真实信息写作，不要编造未提供的技术细节、数据或对比）：
 - 项目名称：{name}
 - 项目地址：{url}
 - 项目描述：{desc}
+- 主要语言：{language}
+- 总 Star 数：{stars}
+- 今日新增 Star：{today_stars}
 - 推荐日期：{date}
 
-🎯 写作策略（重要！）：
-根据项目特点，选择最适合的文章结构。不要使用固定模板，要让每篇文章都有独特的风格和视角。
+🎯 写作要求：
+1. 文章标题写在第一行，不要包含任何 HTML 标签。标题要吸引人，可选择性加入 1 个相关图标（如 🚀 🛠️ ⚡ 等），不带图标也可以。
+2. 正文内容从第二行开始，使用 HTML 格式，使用中文撰写。
+3. 文章长度 1000-2000 中文字，要有实质内容，不要空泛。
+4. 正文中使用适当的 HTML 标签：<p>, <h2>, <h3>, <ul>, <li>, <code>, <strong>, <em>, <blockquote> 等。
+5. 所有标题标签必须包含 id 属性，例如：<h2 id="project-introduction">项目介绍</h2>。
+6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）。
+7. 直接返回文章内容，不要有前言、说明文字或总结性后记。
 
-📝 文章结构建议（根据项目特点灵活选择3-6个部分）：
-{selected_structure['intro']}
-
-建议包含以下部分（但不要全部都用，根据项目特点选择3-5个即可）：
-{chr(10).join(['- ' + s for s in selected_structure['structure']])}
-
-⚠️ 注意：不要固定使用相同的结构！根据项目类型：
-- 如果是框架/库：侧重技术实现和使用方法
-- 如果是工具：侧重实用场景和效果
-- 如果是 CLI 工具：侧重命令行体验和效率提升
-- 如果是 UI/前端：侧重视觉效果和用户体验
-- 如果是后端/基础设施：侧重架构设计和性能
-
-✨ 写作要求：
-1. 文章标题请直接写在第一行，不要包含任何 HTML 标签。标题要吸引人，包含项目名称和1-2个相关的有趣图标（如 🤖 🚀 🛠️ ⚡ 🎨 🔥 💡 📦 🌟 等）来标识这是自动生成的文章
-2. 正文内容从第二行开始，使用 HTML 格式
-3. 文章长度1000-2000字，要有实质内容，不要空泛
-4. 正文中使用适当的 HTML 标签：<p>, <h2>, <h3>, <ul>, <li>, <code>, <strong>, <em>, <blockquote> 等
-5. 所有标题标签必须包含 id 属性，例如：<h2 id="project-introduction">项目介绍</h2>
-6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）
-7. 直接返回文章内容，不要有其他说明文字
-8. 使用专业但易懂的技术语言，要有趣味性和可读性
-9. 添加一些代码以增加可读性和趣味性，添加一些适当的图标如 📦 🚀 🛠️ 等以增加趣味性
-
-🖼️ 图片生成要求（如果模型支持图片输出）：
-- 如果你的模型支持生成图片，请在文章中适当位置（通常 2-3 处）生成与文章内容紧密相关的配图
-- 图片应帮助读者理解文章内容，例如：项目架构图、流程示意图、使用场景演示、功能对比图等
-- 不要生成纯装饰性图片，每张图都应有实际的信息价值
-- 图片应使用标准 HTML 标签插入：<img alt="图片描述文字" src="图片URL或base64数据" />
-- alt 属性必须填写，用一句话描述图片内容，方便无图环境理解
-- 如果模型不支持图片生成，则忽略此要求，仅生成纯文本文章即可
-
-🎨 增加趣味性的建议：
-- 开头可以用一个有趣的故事、场景或问题引入
-- 适当使用技术梗、开发趣事或生动的比喻
-- 添加一些开发者会有共鸣的细节
-- 使用生动的例子和场景描述
-- 在合适的地方添加表情符号（但不要过度使用）
+📝 内容要求：
+- 只基于上面提供的真实项目信息写作。对于项目中没有提供的信息，可以基于项目描述进行合理推断，但要明确表述为推测而非事实。
+- 正文中必须包含项目地址链接，方便读者访问原项目。
+- 根据项目类型调整文章侧重点：框架/库侧重技术实现，工具侧重实用场景，CLI 工具侧重命令行体验，UI/前端注重视觉效果，后端/基础设施侧重架构设计。
+- 文章结构灵活，根据项目特点自行组织段落，不需要固定模板。
+- 标题措辞要多样，避免每篇都用"项目介绍"、"功能特点"等重复词汇。
 
 💻 代码格式要求：
-- 所有代码块必须使用 <pre><code> 标签包裹
-- 不要使用 ``` 来包裹代码块
-- 行内代码使用 <code> 标签
-- 代码要有适当的缩进和语法高亮提示（class="language-xxx"）
+- 所有代码块必须使用 <pre><code> 标签包裹，不要使用 ``` 包裹代码块。
+- 行内代码使用 <code> 标签。
+- 代码要有适当的缩进和语法高亮提示（class="language-xxx"）。
 
 示例正确的格式：
 <pre><code class="language-python">
@@ -240,15 +192,9 @@ class Example:
 
 行内代码示例：使用 <code>console.log()</code> 进行调试。
 
-🔄 文章结构多样性要求：
-- 不同项目应该有不同的文章结构
-- 不要总是用相同的段落顺序
-- 可以根据项目特点调整重点（比如有些项目适合先讲技术，有些适合先讲场景）
-- 标题要多样，不要总是"项目介绍"、"功能特点"这种固定词汇
-
-请严格按照这个格式返回：
-文章标题（第一行，不要HTML标签）
-<html内容>（从第二行开始）
+请严格按照以下格式返回（不要有任何其他内容）：
+文章标题（第一行，纯文本，不含 HTML 标签）
+<html正文>（从第二行开始）
 """
     return prompt
 
