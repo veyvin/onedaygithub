@@ -1,9 +1,9 @@
 {
-  "name": "nab138/iloader",
-  "url": "https://github.com/nab138/iloader",
-  "desc": "User friendly sideloader",
-  "stars": "2,860",
+  "name": "melgarafael/DeskcommCRM",
+  "url": "https://github.com/melgarafael/DeskcommCRM",
+  "desc": "Open-source AI sales OS — self-hosted CRM with native AI agents + WhatsApp (WAHA). Open alternative to Kommo, Octadesk & Intercom for any business that sells by chat. MCP-ready, multi-tenant, LGPD.",
+  "stars": "1,698",
   "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-09-11"
+  "date": "2026-09-12"
 }
