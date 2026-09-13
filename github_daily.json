@@ -1,9 +1,9 @@
 {
-  "name": "melgarafael/DeskcommCRM",
-  "url": "https://github.com/melgarafael/DeskcommCRM",
-  "desc": "Open-source AI sales OS — self-hosted CRM with native AI agents + WhatsApp (WAHA). Open alternative to Kommo, Octadesk & Intercom for any business that sells by chat. MCP-ready, multi-tenant, LGPD.",
-  "stars": "1,698",
-  "language": "TypeScript",
+  "name": "JustVugg/colibri",
+  "url": "https://github.com/JustVugg/colibri",
+  "desc": "Run frontier MoE models on hardware you already own — pure C, zero deps, experts streamed from disk. Tiny engine, immense model. 🐦",
+  "stars": "29,382",
+  "language": "C",
   "today_stars": "N/A",
-  "date": "2026-09-12"
+  "date": "2026-09-13"
 }
