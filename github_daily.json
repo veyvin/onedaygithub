@@ -1,9 +1,9 @@
 {
-  "name": "JustVugg/colibri",
-  "url": "https://github.com/JustVugg/colibri",
-  "desc": "Run frontier MoE models on hardware you already own — pure C, zero deps, experts streamed from disk. Tiny engine, immense model. 🐦",
-  "stars": "29,382",
-  "language": "C",
+  "name": "ever-co/ever-gauzy",
+  "url": "https://github.com/ever-co/ever-gauzy",
+  "desc": "Ever® Gauzy™ - Open Business Management Platform (ERP/CRM/HRM/ATS/PM) -https://gauzy.co",
+  "stars": "6,495",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-09-13"
+  "date": "2026-09-15"
 }
