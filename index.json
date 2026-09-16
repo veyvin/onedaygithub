@@ -1,9 +1,9 @@
 {
-  "name": "ever-co/ever-gauzy",
-  "url": "https://github.com/ever-co/ever-gauzy",
-  "desc": "Ever® Gauzy™ - Open Business Management Platform (ERP/CRM/HRM/ATS/PM) -https://gauzy.co",
-  "stars": "6,495",
-  "language": "TypeScript",
+  "name": "cloudflare/security-audit-skill",
+  "url": "https://github.com/cloudflare/security-audit-skill",
+  "desc": "A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings",
+  "stars": "6,599",
+  "language": "JavaScript",
   "today_stars": "N/A",
-  "date": "2026-09-15"
+  "date": "2026-09-16"
 }
