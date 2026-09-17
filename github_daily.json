@@ -1,9 +1,9 @@
 {
-  "name": "cloudflare/security-audit-skill",
-  "url": "https://github.com/cloudflare/security-audit-skill",
-  "desc": "A coding-agent skill for multi-phase security audits with independently verified, machine-readable findings",
-  "stars": "6,599",
-  "language": "JavaScript",
+  "name": "Tencent/BrowserSkill",
+  "url": "https://github.com/Tencent/BrowserSkill",
+  "desc": "Let AI agents use your real, logged-in browser without interrupting your work. CLI + extension for browser automation across any shell-capable AI agent.",
+  "stars": "3,991",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-09-16"
+  "date": "2026-09-17"
 }
