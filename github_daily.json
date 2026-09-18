@@ -1,9 +1,9 @@
 {
-  "name": "Tencent/BrowserSkill",
-  "url": "https://github.com/Tencent/BrowserSkill",
-  "desc": "Let AI agents use your real, logged-in browser without interrupting your work. CLI + extension for browser automation across any shell-capable AI agent.",
-  "stars": "3,991",
-  "language": "TypeScript",
+  "name": "TencentCloud/Octop",
+  "url": "https://github.com/TencentCloud/Octop",
+  "desc": "A smarter, self-hosted AI assistant — multi-user, multi-agent.",
+  "stars": "3,894",
+  "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-09-17"
+  "date": "2026-09-18"
 }
