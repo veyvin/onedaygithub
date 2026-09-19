@@ -1,9 +1,9 @@
 {
-  "name": "TencentCloud/Octop",
-  "url": "https://github.com/TencentCloud/Octop",
-  "desc": "A smarter, self-hosted AI assistant — multi-user, multi-agent.",
-  "stars": "3,894",
-  "language": "Python",
+  "name": "trycua/cua",
+  "url": "https://github.com/trycua/cua",
+  "desc": "Scale computer-use 2.0 with open-source drivers, cross-OS fleets, and benchmarks for training, evaluation, and data generation.",
+  "stars": "24,147",
+  "language": "HTML",
   "today_stars": "N/A",
-  "date": "2026-09-18"
+  "date": "2026-09-19"
 }
