@@ -1,9 +1,9 @@
 {
-  "name": "trycua/cua",
-  "url": "https://github.com/trycua/cua",
-  "desc": "Scale computer-use 2.0 with open-source drivers, cross-OS fleets, and benchmarks for training, evaluation, and data generation.",
-  "stars": "24,147",
-  "language": "HTML",
+  "name": "BuilderIO/agent-native",
+  "url": "https://github.com/BuilderIO/agent-native",
+  "desc": "A framework for building agentic apps",
+  "stars": "5,100",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-09-19"
+  "date": "2026-09-20"
 }
