@@ -1,9 +1,9 @@
 {
-  "name": "Open-Dev-Society/OpenStock",
-  "url": "https://github.com/Open-Dev-Society/OpenStock",
-  "desc": "OpenStock is an open-source alternative to expensive market platforms. Track real-time prices, set personalized alerts, and explore detailed company insights — built openly, for everyone, forever free.",
-  "stars": "17,581",
-  "language": "TypeScript",
+  "name": "agent-substrate/substrate",
+  "url": "https://github.com/agent-substrate/substrate",
+  "desc": "Agent Substrate: the core system",
+  "stars": "2,873",
+  "language": "Go",
   "today_stars": "N/A",
-  "date": "2026-09-21"
+  "date": "2026-09-22"
 }
