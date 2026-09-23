@@ -1,9 +1,9 @@
 {
-  "name": "agent-substrate/substrate",
-  "url": "https://github.com/agent-substrate/substrate",
-  "desc": "Agent Substrate: the core system",
-  "stars": "2,873",
+  "name": "google/ax",
+  "url": "https://github.com/google/ax",
+  "desc": "Google's open agentic orchestration runtime",
+  "stars": "8,829",
   "language": "Go",
   "today_stars": "N/A",
-  "date": "2026-09-22"
+  "date": "2026-09-23"
 }
