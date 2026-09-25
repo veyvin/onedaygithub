@@ -1,9 +1,9 @@
 {
-  "name": "vectorize-io/hindsight",
-  "url": "https://github.com/vectorize-io/hindsight",
-  "desc": "Hindsight: Agent Memory That Learns",
-  "stars": "27,631",
-  "language": "Python",
+  "name": "paperclipai/paperclip",
+  "url": "https://github.com/paperclipai/paperclip",
+  "desc": "The open-source app everyone uses to manage agents at work",
+  "stars": "84,462",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-09-24"
+  "date": "2026-09-25"
 }
