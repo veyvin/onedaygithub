@@ -1,9 +1,9 @@
 {
-  "name": "paperclipai/paperclip",
-  "url": "https://github.com/paperclipai/paperclip",
-  "desc": "The open-source app everyone uses to manage agents at work",
-  "stars": "84,462",
-  "language": "TypeScript",
+  "name": "NVIDIA/Model-Optimizer",
+  "url": "https://github.com/NVIDIA/Model-Optimizer",
+  "desc": "A unified library of SOTA model optimization techniques like quantization, distillation, pruning, neural architecture search, speculative decoding, etc. It compresses deep learning models for downstream deployment frameworks like TensorRT-LLM, TensorRT, vLLM, etc. to optimize inference speed.",
+  "stars": "4,682",
+  "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-09-25"
+  "date": "2026-09-26"
 }
