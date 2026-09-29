@@ -1,9 +1,9 @@
 {
-  "name": "NawfalMotii79/PLFM_RADAR",
-  "url": "https://github.com/NawfalMotii79/PLFM_RADAR",
-  "desc": "Open-source, low-cost 10.5 GHz PLFM phased array RADAR system",
-  "stars": "25,717",
-  "language": "PLSQL",
+  "name": "NVIDIA/OpenShell",
+  "url": "https://github.com/NVIDIA/OpenShell",
+  "desc": "OpenShell is the safe, private runtime for autonomous AI agents.",
+  "stars": "10,422",
+  "language": "Rust",
   "today_stars": "N/A",
-  "date": "2026-09-28"
+  "date": "2026-09-29"
 }
