@@ -1,9 +1,9 @@
 {
-  "name": "NVIDIA/OpenShell",
-  "url": "https://github.com/NVIDIA/OpenShell",
-  "desc": "OpenShell is the safe, private runtime for autonomous AI agents.",
-  "stars": "10,422",
-  "language": "Rust",
+  "name": "mvschwarz/openrig",
+  "url": "https://github.com/mvschwarz/openrig",
+  "desc": "Multi-agent harness that runs Claude Code and Codex together as one system",
+  "stars": "2,929",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-09-29"
+  "date": "2026-09-30"
 }
