@@ -1,9 +1,9 @@
 {
-  "name": "mvschwarz/openrig",
-  "url": "https://github.com/mvschwarz/openrig",
-  "desc": "Multi-agent harness that runs Claude Code and Codex together as one system",
-  "stars": "2,929",
-  "language": "TypeScript",
+  "name": "Panniantong/Agent-Reach",
+  "url": "https://github.com/Panniantong/Agent-Reach",
+  "desc": "Give your AI agent eyes to see the entire internet. Read & search Twitter, Reddit, YouTube, GitHub, Bilibili, XiaoHongShu — one CLI, zero API fees.",
+  "stars": "88,421",
+  "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-09-30"
+  "date": "2026-10-02"
 }
