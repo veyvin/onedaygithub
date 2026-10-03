@@ -1,9 +1,9 @@
 {
-  "name": "Panniantong/Agent-Reach",
-  "url": "https://github.com/Panniantong/Agent-Reach",
-  "desc": "Give your AI agent eyes to see the entire internet. Read & search Twitter, Reddit, YouTube, GitHub, Bilibili, XiaoHongShu — one CLI, zero API fees.",
-  "stars": "88,421",
-  "language": "Python",
+  "name": "Effect-TS/effect",
+  "url": "https://github.com/Effect-TS/effect",
+  "desc": "Build production-ready applications in TypeScript",
+  "stars": "16,762",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-10-02"
+  "date": "2026-10-03"
 }
