@@ -1,9 +1,9 @@
 {
-  "name": "Effect-TS/effect",
-  "url": "https://github.com/Effect-TS/effect",
-  "desc": "Build production-ready applications in TypeScript",
-  "stars": "16,762",
+  "name": "tester-army/e2e",
+  "url": "https://github.com/tester-army/e2e",
+  "desc": "Next generation e2e testing framework for web and mobile apps.",
+  "stars": "2,840",
   "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-10-03"
+  "date": "2026-10-04"
 }
