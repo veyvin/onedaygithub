@@ -1,9 +1,9 @@
 {
-  "name": "tester-army/e2e",
-  "url": "https://github.com/tester-army/e2e",
-  "desc": "Next generation e2e testing framework for web and mobile apps.",
-  "stars": "2,840",
-  "language": "TypeScript",
+  "name": "michael-denyer/pstack-claude",
+  "url": "https://github.com/michael-denyer/pstack-claude",
+  "desc": "Claude Code, Codex, Pi, OpenCode, Gemini, and Prime Agent versions of Poteto's pstack. Rigorous agent workflows with Cursor primitives translated for other harnesses.",
+  "stars": "1,408",
+  "language": "JavaScript",
   "today_stars": "N/A",
-  "date": "2026-10-04"
+  "date": "2026-10-05"
 }
