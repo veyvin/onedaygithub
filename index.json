@@ -1,9 +1,9 @@
 {
-  "name": "michael-denyer/pstack-claude",
-  "url": "https://github.com/michael-denyer/pstack-claude",
-  "desc": "Claude Code, Codex, Pi, OpenCode, Gemini, and Prime Agent versions of Poteto's pstack. Rigorous agent workflows with Cursor primitives translated for other harnesses.",
-  "stars": "1,408",
-  "language": "JavaScript",
+  "name": "boykopovar/AnyPS5",
+  "url": "https://github.com/boykopovar/AnyPS5",
+  "desc": "Tool for automatic PS5 executables porting to Linux and Windows",
+  "stars": "6,194",
+  "language": "C++",
   "today_stars": "N/A",
-  "date": "2026-10-05"
+  "date": "2026-10-06"
 }
