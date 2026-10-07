@@ -1,9 +1,9 @@
 {
-  "name": "boykopovar/AnyPS5",
-  "url": "https://github.com/boykopovar/AnyPS5",
-  "desc": "Tool for automatic PS5 executables porting to Linux and Windows",
-  "stars": "6,194",
-  "language": "C++",
+  "name": "morluto/rea",
+  "url": "https://github.com/morluto/rea",
+  "desc": "Reverse engineer anything with agents, from app behavior down to native binaries.",
+  "stars": "14,284",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-10-06"
+  "date": "2026-10-07"
 }
