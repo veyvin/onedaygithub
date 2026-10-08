@@ -1,9 +1,9 @@
 {
-  "name": "morluto/rea",
-  "url": "https://github.com/morluto/rea",
-  "desc": "Reverse engineer anything with agents, from app behavior down to native binaries.",
-  "stars": "14,284",
-  "language": "TypeScript",
+  "name": "EpicGames/raddebugger",
+  "url": "https://github.com/EpicGames/raddebugger",
+  "desc": "A native, user-mode, multi-process, graphical debugger.",
+  "stars": "8,081",
+  "language": "C",
   "today_stars": "N/A",
-  "date": "2026-10-07"
+  "date": "2026-10-08"
 }
