@@ -1,9 +1,9 @@
 {
-  "name": "EpicGames/raddebugger",
-  "url": "https://github.com/EpicGames/raddebugger",
-  "desc": "A native, user-mode, multi-process, graphical debugger.",
-  "stars": "8,081",
-  "language": "C",
+  "name": "BerriAI/litellm",
+  "url": "https://github.com/BerriAI/litellm",
+  "desc": "The fastest, litest AI Gateway. Rust core with Python SDK. Call 100+ LLM APIs in OpenAI (or native) format with cost tracking, guardrails, load balancing, and logging [Bedrock, Azure, OpenAI, Anthropic, OpenAI, VertexAI, vLLM, Nvidia NIM]",
+  "stars": "60,585",
+  "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-10-08"
+  "date": "2026-10-09"
 }
