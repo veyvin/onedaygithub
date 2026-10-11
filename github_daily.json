@@ -1,9 +1,9 @@
 {
-  "name": "storytold/artcraft",
-  "url": "https://github.com/storytold/artcraft",
-  "desc": "ArtCraft is an intentional crafting engine for artists, designers, and filmmakers",
-  "stars": "13,892",
-  "language": "Rust",
+  "name": "pytorch/pytorch",
+  "url": "https://github.com/pytorch/pytorch",
+  "desc": "Tensors and Dynamic neural networks in Python with strong GPU acceleration",
+  "stars": "104,411",
+  "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-10-10"
+  "date": "2026-10-11"
 }
