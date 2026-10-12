@@ -1,9 +1,9 @@
 {
-  "name": "pytorch/pytorch",
-  "url": "https://github.com/pytorch/pytorch",
-  "desc": "Tensors and Dynamic neural networks in Python with strong GPU acceleration",
-  "stars": "104,411",
+  "name": "open-webui/open-webui",
+  "url": "https://github.com/open-webui/open-webui",
+  "desc": "User-friendly AI Interface (Supports Ollama, OpenAI API, ...)",
+  "stars": "154,909",
   "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-10-11"
+  "date": "2026-10-12"
 }
