@@ -1,9 +1,9 @@
 {
-  "name": "open-webui/open-webui",
-  "url": "https://github.com/open-webui/open-webui",
-  "desc": "User-friendly AI Interface (Supports Ollama, OpenAI API, ...)",
-  "stars": "154,909",
-  "language": "Python",
+  "name": "vercel-labs/skills",
+  "url": "https://github.com/vercel-labs/skills",
+  "desc": "The open agent skills tool - npx skills",
+  "stars": "34,393",
+  "language": "TypeScript",
   "today_stars": "N/A",
-  "date": "2026-10-12"
+  "date": "2026-10-13"
 }
