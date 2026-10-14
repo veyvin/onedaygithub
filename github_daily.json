@@ -1,9 +1,9 @@
 {
-  "name": "vercel-labs/skills",
-  "url": "https://github.com/vercel-labs/skills",
-  "desc": "The open agent skills tool - npx skills",
-  "stars": "34,393",
-  "language": "TypeScript",
+  "name": "ifixai-ai/iFixAi",
+  "url": "https://github.com/ifixai-ai/iFixAi",
+  "desc": "Independent Auditing of AI Agents. Run by human or the agent itself, to answer the most crucial question in the AI Agent Economy. Is the agent doing what is supposed to do? With iFixAi you can have this answer in less than 120 seconds.",
+  "stars": "27,164",
+  "language": "Python",
   "today_stars": "N/A",
-  "date": "2026-10-13"
+  "date": "2026-10-14"
 }
