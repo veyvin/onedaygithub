@@ -1,9 +1,9 @@
 {
-  "name": "ifixai-ai/iFixAi",
-  "url": "https://github.com/ifixai-ai/iFixAi",
-  "desc": "Independent Auditing of AI Agents. Run by human or the agent itself, to answer the most crucial question in the AI Agent Economy. Is the agent doing what is supposed to do? With iFixAi you can have this answer in less than 120 seconds.",
-  "stars": "27,164",
-  "language": "Python",
+  "name": "NationalSecurityAgency/ghidra",
+  "url": "https://github.com/NationalSecurityAgency/ghidra",
+  "desc": "Ghidra is a software reverse engineering (SRE) framework",
+  "stars": "88,535",
+  "language": "Java",
   "today_stars": "N/A",
-  "date": "2026-10-14"
+  "date": "2026-10-15"
 }
