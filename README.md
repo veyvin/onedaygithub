@@ -129,9 +129,25 @@ flowchart LR
   当成 200 成功页，造成「令牌失效却提示发布成功」的假成功；
 - 令牌无效（401/403）单独报错并提示重新创建 PAT。
 
-若浏览器 UA 仍被拦截，需要在 Cloudflare 侧放行 API 路径：Security → WAF → Custom Rules，
-为 `/apis/*` 跳过 Managed Challenge；若站点开了 `I'm Under Attack Mode`，改回 Medium，
-或改用一个未开启挑战的 API 子域名作为 `HALO_URL`。
+若浏览器 UA 仍被拦截（**GitHub Actions 上最常见的情况**），说明是来源 IP 信誉问题：
+Actions 跑在数据中心 IP 段，Cloudflare 的 Bot 管理会无视 UA 直接质询。此时需要在
+Cloudflare 侧放行 API 路径：
+
+- Security → WAF → Custom Rules → 新建规则
+  - 表达式：`http.request.uri.path starts_with "/apis/"`
+  - 动作：`Allow`（跳过 WAF / Bot 校验）
+  - `/apis/*` 本身由 Halo 的 Personal Access Token 鉴权保护，放行不影响数据安全。
+  - 想更严格，可只放行本项目用到的三个接口：
+    ```
+    http.request.uri.path in {
+      "/apis/content.halo.run/v1alpha1/categories"
+      "/apis/content.halo.run/v1alpha1/tags"
+      "/apis/api.console.halo.run/v1alpha1/posts"
+    }
+    ```
+- 或在 Bot 管理中为 `/apis/*` 关闭质询（Super Bot Fight Mode 场景）；
+- 最彻底的做法：单独开一个 API 子域名（如 `api.example.com`）不启用挑战，
+  再把它配成仓库变量 `HALO_URL`，无需改代码。
 
 ### 发布前预检
 ```bash
@@ -146,8 +162,9 @@ A: 请确认 `HALO_TOKEN` 是 Halo 2.x 的 Personal Access Token，且具备「�
 
 **Q: 日志里出现 403 和 "Just a moment..." / `Cf-Mitigated: challenge`？**
 A: 这是 Cloudflare 人机校验拦截，不是 Halo 的问题，也和 slug/token 无关。先跑
-`python publish_to_halo.py --check` 复现；若确认是站点防护策略拦截，按上一节在
-Cloudflare 侧为 `/apis/*` 跳过 Managed Challenge。
+`python publish_to_halo.py --check` 复现。脚本已带浏览器 UA，若**在本地能通过、
+在 Actions 里仍被拦截**，就是数据中心 IP 信誉问题，需要按上一节在 Cloudflare 上为
+`/apis/*` 建一条 `Allow` 规则。
 
 **Q: 想换大模型怎么办？**
 A: 修改 `generate_post.py` 中 `DEEPSEEK_API_URL` 与 `payload["model"]` 即可，例如改为 `https://api.openai.com/v1/chat/completions` 配合 `gpt-4o`。

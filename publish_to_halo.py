@@ -20,12 +20,17 @@ BROWSER_UA = (
 )
 
 CHALLENGE_HINT = (
-    "站点在 Cloudflare 后面并开启了人机校验/Bot 防护，请求未被放行。\n"
-    "   解决方式（二选一）：\n"
-    "     1. Cloudflare 控制台 → Security → WAF → Custom Rules，为 /apis/* "
-    "路径跳过 Managed Challenge；\n"
-    "     2. 若站点开启了 'I'm Under Attack Mode'，在 Zone 设置里改回 Medium，"
-    "或换一个未开启挑战的域名（如 API 子域名）作为 HALO_URL。"
+    "站点在 Cloudflare 后面开启了人机校验/Bot 防护，本次请求未被放行。\n"
+    "   注意：脚本已带浏览器 UA（普通网络环境下足以通过），仍被拦截说明是"
+    "来源 IP 信誉问题 —— GitHub Actions 跑在数据中心 IP 段，会被 Bot 管理拦截。\n"
+    "   解决方式（任选其一）：\n"
+    "     1. Cloudflare → Security → WAF → Custom Rules，新建规则：\n"
+    "        表达式 http.request.uri.path starts_with \"/apis/\"\n"
+    "        动作选 Allow（跳过 WAF / Bot 校验）。/apis 由 Halo 自身的令牌鉴权保护，\n"
+    "        放行不影响安全性；想更严格可只放行本项目用到的三个接口。\n"
+    "     2. 若拦截来自 Super Bot Fight Mode，在 Bot 管理里为 /apis/* "
+    "关闭该类请求的质询。\n"
+    "     3. 换用一个未开启挑战的 API 子域名作为 HALO_URL（最彻底）。"
 )
 
 
