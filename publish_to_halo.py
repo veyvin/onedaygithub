@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import sys
 import requests
 import time
 from datetime import datetime, timedelta
@@ -9,9 +10,105 @@ from datetime import datetime, timedelta
 DEFAULT_CATEGORIES = ["GitHub Trending", "开源项目"]
 DEFAULT_TAGS = ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布", "自动化"]
 
+# 站点通常在 Cloudflare 后面并开启了 Bot 防护：requests 默认的
+# python-requests/x.y User-Agent 会被判定为机器人，直接收到 403 +
+# Cf-Mitigated: challenge 的 "Just a moment..." 页面（而不是 Halo 的 JSON）。
+# 请求头伪装成常规浏览器即可通过，无需执行 JS 挑战。
+BROWSER_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+)
+
+CHALLENGE_HINT = (
+    "站点在 Cloudflare 后面并开启了人机校验/Bot 防护，请求未被放行。\n"
+    "   解决方式（二选一）：\n"
+    "     1. Cloudflare 控制台 → Security → WAF → Custom Rules，为 /apis/* "
+    "路径跳过 Managed Challenge；\n"
+    "     2. 若站点开启了 'I'm Under Attack Mode'，在 Zone 设置里改回 Medium，"
+    "或换一个未开启挑战的域名（如 API 子域名）作为 HALO_URL。"
+)
+
+
+class CloudflareChallengeError(RuntimeError):
+    """Cloudflare 人机校验拦截：这类错误重试无效，应直接失败并给出配置指引。"""
+
+
+class HaloAuthError(RuntimeError):
+    """HALO_TOKEN 无效/过期，Halo 将请求重定向到了登录页。"""
+
+
+def build_headers(token: str) -> dict:
+    """构造请求头。User-Agent 是关键：见 BROWSER_UA 注释。"""
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/plain, */*",
+        "User-Agent": os.getenv("HALO_USER_AGENT") or BROWSER_UA,
+    }
+
+
+def _is_cloudflare_challenge(response: requests.Response) -> bool:
+    """判断响应是否为 Cloudflare 的 "Just a moment..." 人机校验页面。"""
+    if response.status_code != 403:
+        return False
+    if (response.headers.get("cf-mitigated") or "").lower() == "challenge":
+        return True
+    content_type = (response.headers.get("content-type") or "").lower()
+    return "text/html" in content_type and "just a moment" in response.text[:2000].lower()
+
+
+def _brief(response: requests.Response, limit: int = 200) -> str:
+    """提取可读的错误摘要，避免把整页 HTML/挑战脚本刷进日志。"""
+    try:
+        text = " ".join(response.text.split())
+    except Exception:  # pragma: no cover - 理论上不会发生
+        return "<无法解析的响应体>"
+    return text[:limit]
+
+
+def halo_request(method: str, url: str, headers: dict, timeout: int = 15, **kwargs):
+    """统一的 Halo 请求入口：携带浏览器 UA、禁用重定向、识别 Cloudflare 挑战。"""
+    response = requests.request(
+        method, url, headers=headers, timeout=timeout, allow_redirects=False, **kwargs
+    )
+
+    if _is_cloudflare_challenge(response):
+        raise CloudflareChallengeError(
+            f"Cloudflare 拦截了 {method} {url}（403 质询页面）。\n   {CHALLENGE_HINT}"
+        )
+
+    # Halo 对未认证的 /apis/** 请求会 302 到登录页。这里必须关闭自动重定向，
+    # 否则 requests 会跟到登录页并拿到 200 HTML，被误判成"发布成功"。
+    location = response.headers.get("location") or ""
+    if 300 <= response.status_code < 400 and "/login" in location:
+        raise HaloAuthError(
+            f"HALO_TOKEN 未通过认证（{response.status_code} -> {location}）。\n"
+            "   请在 Halo 控制台 个人中心 → 令牌 重新创建带文章管理权限的 "
+            "Personal Access Token，并确认其已写入 GitHub Secret HALO_TOKEN。"
+        )
+
+    # 请求已经到达 Halo，说明 Cloudflare 不是问题：此时 401/403 是令牌/权限问题。
+    if response.status_code in (401, 403):
+        reason = (
+            "令牌无效或已过期" if response.status_code == 401
+            else "令牌权限不足（缺少文章管理权限）"
+        )
+        detail = f" - {_brief(response)}" if response.text.strip() else ""
+        raise HaloAuthError(
+            f"Halo 拒绝了本次请求：{response.status_code}，{reason}{detail}\n"
+            "   请在 Halo 控制台 个人中心 → 令牌 重新创建带文章管理权限的 "
+            "Personal Access Token，并确认其已写入 GitHub Secret HALO_TOKEN。"
+        )
+
+    return response
+
 
 def retry_request(max_retries=3, delay=2):
-    """网络请求重试装饰器，处理临时失败"""
+    """网络请求重试装饰器，处理临时失败。
+
+    仅重试可恢复的网络异常；CloudflareChallengeError / HaloAuthError
+    属于配置问题，重试无益，直接向上抛出。
+    """
     def decorator(func):
         def wrapper(*args, **kwargs):
             retries = 0
@@ -42,8 +139,9 @@ def _to_ascii_slug(s: str) -> str:
 def list_categories(halo_url: str, headers: dict) -> list:
     """获取分类列表"""
     url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/categories"
-    r = requests.get(url, headers=headers, params={"size": 100}, timeout=15)
+    r = halo_request("GET", url, headers, params={"size": 100})
     if r.status_code != 200:
+        print(f"   获取分类列表失败: {r.status_code} - {_brief(r)}")
         return []
     data = r.json()
     return data.get("items") or []
@@ -53,8 +151,9 @@ def list_categories(halo_url: str, headers: dict) -> list:
 def list_tags(halo_url: str, headers: dict) -> list:
     """获取标签列表"""
     url = f"{halo_url.rstrip('/')}/apis/content.halo.run/v1alpha1/tags"
-    r = requests.get(url, headers=headers, params={"size": 100}, timeout=15)
+    r = halo_request("GET", url, headers, params={"size": 100})
     if r.status_code != 200:
+        print(f"   获取标签列表失败: {r.status_code} - {_brief(r)}")
         return []
     data = r.json()
     return data.get("items") or []
@@ -79,9 +178,9 @@ def create_category(halo_url: str, headers: dict, display_name: str, slug: str) 
             "children": [],
         },
     }
-    r = requests.post(url, headers=headers, json=payload, timeout=15)
+    r = halo_request("POST", url, headers, json=payload)
     if r.status_code not in (200, 201):
-        print(f"   创建分类失败 [{display_name}]: {r.status_code} - {r.text[:150]}")
+        print(f"   创建分类失败 [{display_name}]: {r.status_code} - {_brief(r)}")
         return None
     data = r.json()
     return data.get("metadata", {}).get("name")
@@ -98,9 +197,9 @@ def create_tag(halo_url: str, headers: dict, display_name: str, slug: str) -> st
         "metadata": {"name": name},
         "spec": {"displayName": display_name, "slug": slug or name},
     }
-    r = requests.post(url, headers=headers, json=payload, timeout=15)
+    r = halo_request("POST", url, headers, json=payload)
     if r.status_code not in (200, 201):
-        print(f"   创建标签失败 [{display_name}]: {r.status_code} - {r.text[:150]}")
+        print(f"   创建标签失败 [{display_name}]: {r.status_code} - {_brief(r)}")
         return None
     data = r.json()
     return data.get("metadata", {}).get("name")
@@ -282,10 +381,7 @@ def publish_to_halo(post_data):
     print(f"生成的唯一 slug: {slug}")
     print(f"发布日期: {previous_date_str}")
 
-    headers = {
-        "Authorization": f"Bearer {HALO_TOKEN}",
-        "Content-Type": "application/json"
-    }
+    headers = build_headers(HALO_TOKEN)
 
     # 解析分类和标签为 Halo 的 metadata.name（ID），不存在则创建
     print("准备分类和标签...")
@@ -333,14 +429,15 @@ def publish_to_halo(post_data):
     }
     
     try:
-        response = requests.post(
+        response = halo_request(
+            "POST",
             f"{HALO_URL}/apis/api.console.halo.run/v1alpha1/posts",
-            headers=headers,
+            headers,
+            timeout=30,
             json=payload,
-            timeout=30
         )
         
-        if response.status_code == 200:
+        if response.status_code in (200, 201):
             print("✅ 文章发布到 Halo 成功！")
             print(f"📝 文章标题: {title}")
             print(f"🔗 文章 slug: {slug}")
@@ -352,12 +449,12 @@ def publish_to_halo(post_data):
             return response.json()
         elif response.status_code == 530:
             # Cloudflare 530 错误，通常是临时网络问题
-            print(f"🌐 Cloudflare 530 错误: {response.text[:200]}")
+            print(f"🌐 Cloudflare 530 错误: {_brief(response)}")
             print("💡 提示: 这通常是临时的网络连接问题，重试可能会解决")
             raise requests.exceptions.RequestException("Cloudflare 530 Tunnel error")
         else:
             print(f"❌ 发布失败: {response.status_code}")
-            print(f"📋 错误详情: {response.text}")
+            print(f"📋 错误详情: {_brief(response, 400)}")
             
             # 如果是重复错误，提供更详细的解决方案
             if response.status_code == 400 and "名称重复" in response.text:
@@ -365,6 +462,9 @@ def publish_to_halo(post_data):
                 print("   虽然使用了唯一 slug，但仍然出现重复，可能是极端情况")
                 print("   建议检查 Halo 后台是否已存在相同标题或 slug 的文章")
                 print(f"   当前 slug: {slug}")
+            elif response.status_code in (401, 403):
+                print("\n💡 解决方案:")
+                print("   请确认 HALO_TOKEN 仍然有效，且具备文章管理权限")
             
             return None
             
@@ -372,25 +472,74 @@ def publish_to_halo(post_data):
         print(f"🌐 发布请求错误: {e}")
         raise
 
-if __name__ == "__main__":
+
+def check_halo_connection() -> bool:
+    """预检 Halo 连通性与令牌有效性，供 CI 在调用大模型前尽早失败。
+
+    避免「文章已生成但发布不了」导致的无效 LLM 开销。
+    """
+    halo_url = (os.getenv("HALO_URL") or "https://veyvin.com").rstrip("/")
+    token = os.getenv("HALO_TOKEN")
+
+    if not token:
+        print("❌ 未找到 HALO_TOKEN 环境变量")
+        return False
+
+    print(f"目标站点: {halo_url}")
+    try:
+        r = halo_request(
+            "GET",
+            f"{halo_url}/apis/content.halo.run/v1alpha1/categories",
+            build_headers(token),
+            params={"size": 1},
+        )
+    except (CloudflareChallengeError, HaloAuthError) as e:
+        print(f"❌ {e}")
+        return False
+    except requests.exceptions.RequestException as e:
+        print(f"❌ 无法连接 Halo: {e}")
+        return False
+
+    if r.status_code != 200:
+        print(f"❌ Halo 返回异常状态: {r.status_code} - {_brief(r)}")
+        return False
+
+    print("✅ Halo 连通正常，令牌有效")
+    return True
+
+
+def main():
+    if "--check" in sys.argv:
+        # 仅做连通性预检，不读取 generated_post.json
+        return 0 if check_halo_connection() else 1
+
     # 读取生成的文章
     post_data = read_generated_post()
     if not post_data:
         print("无法读取生成的文章数据")
-        exit(1)
+        return 1
     
     print(f"开始发布文章到 Halo...")
     print(f"项目: {post_data['repo_info']['name']}")
     print(f"标题: {post_data['title']}")
     
     # 发布到 Halo
-    result = publish_to_halo(post_data)
+    try:
+        result = publish_to_halo(post_data)
+    except (CloudflareChallengeError, HaloAuthError) as e:
+        print(f"\n❌ 发布失败: {e}")
+        return 1
     
     if result:
         print("\n🎉 自动化流程完成！文章已成功发布到 Halo")
         print("✅ 文章已设置为当天发布")
         print("✅ 包含指定的自动化标签")
         print("✅ 使用唯一 slug 避免重复")
-    else:
-        print("\n❌ 发布失败")
-        exit(1)
+        return 0
+    
+    print("\n❌ 发布失败")
+    return 1
+
+
+if __name__ == "__main__":
+    exit(main())

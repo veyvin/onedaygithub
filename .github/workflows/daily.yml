@@ -118,6 +118,16 @@ jobs:
             exit 1
           fi
 
+      - name: Check Halo connectivity
+        env:
+          HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
+          HALO_URL: ${{ vars.HALO_URL }}
+        run: |
+          echo "=== 预检 Halo 连通性与令牌 ==="
+          # 放在生成文章之前：Halo 不可用（如 Cloudflare 拦截）时立即失败，
+          # 避免白白消耗大模型额度。
+          python publish_to_halo.py --check
+
       - name: Get trending repo and update CSV (local only)
         id: get_trending
         run: |
@@ -156,6 +166,7 @@ jobs:
         id: publish
         env:
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
+          HALO_URL: ${{ vars.HALO_URL }}
         run: |
           echo "=== 发布到 Halo ==="
           python publish_to_halo.py

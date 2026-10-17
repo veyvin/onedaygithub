@@ -21,6 +21,7 @@
 - 🗂️ **去重机制**：通过 `processed_repos.csv` 记录已经处理过的仓库 URL，避免短期内重复推荐。
 - ⏰ **北京时间发布**：自动将 GitHub 的 UTC 日期转换为北京时间，统一设置 `publishTime` 为 `T08:00:00+08:00`。
 - 🛡️ **容错重试**：所有网络请求均带 3 次重试，兼容 Cloudflare 530 等瞬时错误。
+- 🧱 **Cloudflare 兼容**：请求携带浏览器 UA 并识别「Just a moment...」质询页，发布前先做连通性预检，避免无效的模型调用。
 - 🌐 **gh-pages 同步**：将当日 trending 数据同步推送到 `gh-pages` 分支，供前端静态页面使用。
 
 ## 目录结构
@@ -53,7 +54,8 @@ onedaygithub/
 | `HALO_TOKEN` | Halo Console 的 Personal Access Token（需具备 `posts:manage` 权限） |
 | `GITHUB_TOKEN` | GitHub Actions 自带，无需手动配置（用于回写 CSV 与推送 gh-pages） |
 
-> 💡 默认的 Halo 站点地址为 `https://veyvin.com`，可在 `publish_to_halo.py` 中通过环境变量 `HALO_URL` 覆盖。
+> 💡 默认的 Halo 站点地址为 `https://veyvin.com`，可通过环境变量 `HALO_URL` 覆盖（无需改代码）。
+> 可选 `HALO_USER_AGENT`：覆盖请求的 User-Agent，默认使用浏览器 UA 以通过 Cloudflare 校验。
 
 ### 2. Fork / 克隆仓库
 
@@ -114,10 +116,38 @@ flowchart LR
 - 未命中的 → 自动 POST 创建；
 - 创建失败 → 退回到列表中的第一项作为 fallback，保证文章始终能挂上至少一个分类/标签。
 
+### 通过 Cloudflare 的人机校验
+如果 Halo 站点套在 Cloudflare 后面并开启了 Bot 防护 / Managed Challenge，`requests` 默认的
+`python-requests/x.y` User-Agent 会直接吃到 `403` + `Cf-Mitigated: challenge` 的
+"Just a moment..." 页面（而非 Halo 的 JSON），表现为「创建分类/标签全部失败」。
+
+`publish_to_halo.py` 的做法：
+
+- 所有请求统一走 `halo_request()`，带上浏览器 UA（可用 `HALO_USER_AGENT` 覆盖）；
+- 识别 Cloudflare 质询页面并抛出明确报错，而不是重试或把整页 HTML 刷进日志；
+- 关闭自动重定向 —— Halo 对未认证请求会 302 到 `/login`，跟随重定向会把登录页
+  当成 200 成功页，造成「令牌失效却提示发布成功」的假成功；
+- 令牌无效（401/403）单独报错并提示重新创建 PAT。
+
+若浏览器 UA 仍被拦截，需要在 Cloudflare 侧放行 API 路径：Security → WAF → Custom Rules，
+为 `/apis/*` 跳过 Managed Challenge；若站点开了 `I'm Under Attack Mode`，改回 Medium，
+或改用一个未开启挑战的 API 子域名作为 `HALO_URL`。
+
+### 发布前预检
+```bash
+python publish_to_halo.py --check   # 只验证连通性与令牌，不发布
+```
+CI 会在调用大模型**之前**执行该预检，Halo 不可用时立即失败，避免白白消耗模型额度。
+
 ## 常见问题
 
 **Q: 为什么我的 Halo 站点发布失败？**
 A: 请确认 `HALO_TOKEN` 是 Halo 2.x 的 Personal Access Token，且具备「文章管理」相关权限。可以在 Halo 控制台 `个人中心 → 令牌` 创建。
+
+**Q: 日志里出现 403 和 "Just a moment..." / `Cf-Mitigated: challenge`？**
+A: 这是 Cloudflare 人机校验拦截，不是 Halo 的问题，也和 slug/token 无关。先跑
+`python publish_to_halo.py --check` 复现；若确认是站点防护策略拦截，按上一节在
+Cloudflare 侧为 `/apis/*` 跳过 Managed Challenge。
 
 **Q: 想换大模型怎么办？**
 A: 修改 `generate_post.py` 中 `DEEPSEEK_API_URL` 与 `payload["model"]` 即可，例如改为 `https://api.openai.com/v1/chat/completions` 配合 `gpt-4o`。

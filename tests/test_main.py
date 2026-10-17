@@ -15,10 +15,16 @@ from generate_post import (
     format_code_blocks,
     _derive_tags_from_repo,
 )
+import publish_to_halo
 from publish_to_halo import (
+    _is_cloudflare_challenge,
     _to_ascii_slug,
+    build_headers,
     generate_unique_slug,
     get_beijing_time,
+    halo_request,
+    CloudflareChallengeError,
+    HaloAuthError,
 )
 
 
@@ -166,6 +172,103 @@ def test_get_beijing_time_adds_eight_hours():
     assert result.month == 9
     assert result.day == 8
     assert result.hour == 8
+
+
+# ------------------ publish_to_halo.py: 请求层（Cloudflare 防护） ------------------
+
+def _fake_response(status_code=200, headers=None, text=""):
+    """构造一个只带必要属性的假响应对象。"""
+    return type(
+        "FakeResponse",
+        (),
+        {
+            "status_code": status_code,
+            "headers": headers or {},
+            "text": text,
+        },
+    )()
+
+
+def test_build_headers_includes_browser_user_agent(monkeypatch):
+    """Cloudflare 会拦截 python-requests 默认 UA，请求头必须伪装成浏览器。"""
+    monkeypatch.delenv("HALO_USER_AGENT", raising=False)
+    headers = build_headers("pat-test")
+    assert "Mozilla/5.0" in headers["User-Agent"]
+    assert "python-requests" not in headers["User-Agent"]
+    assert headers["Authorization"] == "Bearer pat-test"
+    assert headers["Content-Type"] == "application/json"
+
+
+def test_build_headers_user_agent_can_be_overridden(monkeypatch):
+    monkeypatch.setenv("HALO_USER_AGENT", "MyBot/1.0")
+    assert build_headers("pat-test")["User-Agent"] == "MyBot/1.0"
+
+
+def test_is_cloudflare_challenge_detects_cf_mitigated_header():
+    resp = _fake_response(403, {"cf-mitigated": "challenge"}, "")
+    assert _is_cloudflare_challenge(resp) is True
+
+
+def test_is_cloudflare_challenge_detects_just_a_moment_body():
+    resp = _fake_response(403, {"content-type": "text/html; charset=UTF-8"},
+                          "<html><head><title>Just a moment...</title>")
+    assert _is_cloudflare_challenge(resp) is True
+
+
+def test_is_cloudflare_challenge_ignores_normal_responses():
+    assert _is_cloudflare_challenge(_fake_response(200, {}, "{}")) is False
+    # Halo 自身的 401/403 不算 Cloudflare 挑战
+    assert _is_cloudflare_challenge(_fake_response(401, {}, "")) is False
+
+
+def test_halo_request_raises_on_cloudflare_challenge(monkeypatch):
+    monkeypatch.setattr(
+        publish_to_halo.requests, "request",
+        lambda *a, **kw: _fake_response(403, {"cf-mitigated": "challenge"}, ""),
+    )
+    with pytest.raises(CloudflareChallengeError):
+        halo_request("GET", "https://example.com/apis/x", build_headers("pat-x"))
+
+
+def test_halo_request_raises_on_login_redirect(monkeypatch):
+    """未认证时 Halo 会 302 到 /login；不能被当成 200 成功页。"""
+    monkeypatch.setattr(
+        publish_to_halo.requests, "request",
+        lambda *a, **kw: _fake_response(302, {"location": "/login?authentication_required"}, ""),
+    )
+    with pytest.raises(HaloAuthError):
+        halo_request("GET", "https://example.com/apis/x", build_headers("pat-x"))
+
+
+def test_halo_request_raises_on_halo_401(monkeypatch):
+    monkeypatch.setattr(
+        publish_to_halo.requests, "request",
+        lambda *a, **kw: _fake_response(401, {}, ""),
+    )
+    with pytest.raises(HaloAuthError):
+        halo_request("GET", "https://example.com/apis/x", build_headers("pat-x"))
+
+
+def test_halo_request_disables_redirects(monkeypatch):
+    """必须关闭自动重定向，否则登录页 HTML 会被误判成发布成功。"""
+    captured = {}
+
+    def fake_request(method, url, **kwargs):
+        captured.update(kwargs)
+        return _fake_response(200, {}, "{}")
+
+    monkeypatch.setattr(publish_to_halo.requests, "request", fake_request)
+    halo_request("POST", "https://example.com/apis/x", build_headers("pat-x"), json={})
+    assert captured["allow_redirects"] is False
+
+
+def test_halo_request_returns_ok_response(monkeypatch):
+    monkeypatch.setattr(
+        publish_to_halo.requests, "request",
+        lambda *a, **kw: _fake_response(200, {}, '{"items": []}'),
+    )
+    resp = halo_request("GET", "https://example.com/apis/x", build_headers("pat-x"))
+    assert resp.status_code == 200
 
 
 # ----------------------------- github_daily.py -----------------------------
