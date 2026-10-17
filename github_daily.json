@@ -1,9 +1,9 @@
 {
-  "name": "JustVugg/colibri",
-  "url": "https://github.com/JustVugg/colibri",
-  "desc": "Run frontier MoE models on hardware you already own — pure C, zero deps, experts streamed from disk. Tiny engine, immense model. 🐦",
-  "stars": "29,382",
-  "language": "C",
+  "name": "NationalSecurityAgency/ghidra",
+  "url": "https://github.com/NationalSecurityAgency/ghidra",
+  "desc": "Ghidra is a software reverse engineering (SRE) framework",
+  "stars": "88,535",
+  "language": "Java",
   "today_stars": "N/A",
-  "date": "2026-09-13"
+  "date": "2026-10-15"
 }
