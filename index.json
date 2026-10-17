@@ -1,9 +1,12 @@
 {
-  "name": "xerj-org/xerj",
-  "url": "https://github.com/xerj-org/xerj",
-  "desc": "XERJ is the new way for AI to search data. Its autoindex capability activates agents to know your data without the token waste of grep and sed. One command indexes code, docs, logs and PDFs for search, RAG, security audits and agent memory, using 40x fewer tokens than grep. Elasticsearch compatible, so existing clients just work.",
-  "stars": "7,020",
-  "language": "Rust",
-  "today_stars": "N/A",
-  "date": "2026-10-17"
+  "name": "OI-wiki/OI-wiki",
+  "url": "https://github.com/OI-wiki/OI-wiki",
+  "desc": "🌟 Wiki of OI / ICPC for everyone. （某大型游戏线上攻略，内含炫酷算术魔法）",
+  "stars": "26,886",
+  "language": "TypeScript",
+  "today_stars": "10 stars today",
+  "date": "2026-10-17",
+  "source": "zh-daily",
+  "source_label": "中文区日榜（中国）",
+  "period": "daily"
 }
