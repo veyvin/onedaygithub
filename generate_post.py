@@ -229,6 +229,16 @@ def _build_prompt(repo_data):
 
     seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
 
+    # 榜单来源：全球日榜抓完后会自动降级到中文区/周榜等来源，
+    # 在提示词里注明，文章才不会把周榜项目写成「今日新增」。
+    source_label = repo_data.get('source_label')
+    period = repo_data.get('period')
+    if source_label:
+        period_text = {'daily': '日榜（当日新增）', 'weekly': '周榜（当周累计）'}.get(period, period or '')
+        source_line = f"- 榜单来源：{source_label}" + (f"（{period_text}）" if period_text else "") + "\n"
+    else:
+        source_line = ""
+
     structure_templates = [
         {
             "intro": "从一个实际开发场景或痛点开始，然后引出这个项目如何解决这个问题",
@@ -266,6 +276,7 @@ def _build_prompt(repo_data):
 - 项目地址：{url}
 - 项目描述：{desc}
 - 推荐日期：{date}
+{source_line}
 
 🎯 写作策略（重要！）：
 根据项目特点，选择最适合的文章结构。不要使用固定模板，要让每篇文章都有独特的风格和视角。

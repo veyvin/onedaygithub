@@ -8,9 +8,11 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from bs4 import BeautifulSoup
 
 import github_daily
 from generate_post import (
+    _build_prompt,
     extract_title_and_content,
     format_code_blocks,
     strip_emoji,
@@ -440,3 +442,210 @@ def test_save_processed_repo_returns_false_on_write_error(tmp_path, monkeypatch)
     monkeypatch.setattr(github_daily, "CSV_FILE", str(tmp_path / "nope" / "x.csv"))
     repo = {"name": "foo/bar", "url": "https://github.com/foo/bar", "date": "2026-01-01"}
     assert github_daily.save_processed_repo(repo) is False
+
+
+# ---------------- 多来源降级：全球日榜抓完后改用中国区趋势 ----------------
+
+def _repo(name):
+    return {"name": name, "url": f"https://github.com/{name}", "date": "2026-01-01"}
+
+
+def test_trending_sources_start_with_global_daily_and_include_china():
+    """全球日榜必须是第一顺位，中国区榜单必须在候选里。"""
+    urls = [s["url"] for s in github_daily.TRENDING_SOURCES]
+    assert urls[0] == "https://github.com/trending?since=daily"
+    assert "spoken_language_code=zh" in " ".join(urls)
+    assert github_daily.DEFAULT_SOURCE is github_daily.TRENDING_SOURCES[0]
+
+
+def test_trending_sources_have_unique_ids_and_valid_periods():
+    ids = [s["id"] for s in github_daily.TRENDING_SOURCES]
+    assert len(ids) == len(set(ids))
+    for s in github_daily.TRENDING_SOURCES:
+        assert s["period"] in ("daily", "weekly")
+        assert s["url"].startswith("https://github.com/trending")
+
+
+def test_pick_unprocessed_returns_first_new_repo():
+    processed = {"https://github.com/a/a"}
+    repos = [_repo("a/a"), _repo("b/b"), _repo("c/c")]
+    assert github_daily._pick_unprocessed(repos, processed)["name"] == "b/b"
+
+
+def test_pick_unprocessed_returns_none_when_all_done():
+    repos = [_repo("a/a"), _repo("b/b")]
+    processed = {r["url"] for r in repos}
+    assert github_daily._pick_unprocessed(repos, processed) is None
+
+
+def test_get_trending_repo_falls_back_to_china_when_global_exhausted(isolated_csv, monkeypatch):
+    """复线上故障：全球日榜全部处理过时，自动降级到中文区日榜。"""
+    called = []
+
+    def fake_fetch(source):
+        called.append(source["id"])
+        if source["id"] == "global-daily":
+            return [_repo("a/a")]
+        if source["id"] == "zh-daily":
+            return [_repo("b/b")]
+        return None
+
+    monkeypatch.setattr(github_daily, "get_trending_repos", fake_fetch)
+    monkeypatch.setattr(github_daily, "load_processed_repos", lambda: {"https://github.com/a/a"})
+
+    repo = github_daily.get_trending_repo()
+
+    assert repo is not None
+    assert repo["url"] == "https://github.com/b/b"
+    assert called == ["global-daily", "zh-daily"]  # zh 命中后不再往下试
+    assert "https://github.com/b/b" in isolated_csv.read_text()
+
+
+def test_get_trending_repo_skips_empty_sources(isolated_csv, monkeypatch):
+    """某个来源抓不到数据时继续尝试下一个，不应中断。"""
+    def fake_fetch(source):
+        return [_repo("b/b")] if source["id"] == "global-weekly" else None
+
+    monkeypatch.setattr(github_daily, "get_trending_repos", fake_fetch)
+    monkeypatch.setattr(github_daily, "load_processed_repos", lambda: set())
+
+    repo = github_daily.get_trending_repo()
+    assert repo is not None and repo["url"] == "https://github.com/b/b"
+
+
+def test_get_trending_repo_returns_none_when_every_source_exhausted(isolated_csv, monkeypatch):
+    """所有来源都处理完时返回 None（配合 __main__ 的 exit(1)，避免用旧数据重复发文）。"""
+    monkeypatch.setattr(github_daily, "get_trending_repos", lambda source: [_repo("a/a")])
+    monkeypatch.setattr(github_daily, "load_processed_repos", lambda: {"https://github.com/a/a"})
+
+    assert github_daily.get_trending_repo() is None
+    assert not isolated_csv.exists()  # 不应写入任何新记录
+
+
+def test_get_trending_repo_returns_none_when_csv_write_fails(isolated_csv, monkeypatch):
+    """写 CSV 失败必须中止，不能返回仓库，否则下次会重复发布。"""
+    monkeypatch.setattr(github_daily, "get_trending_repos", lambda source: [_repo("b/b")])
+    monkeypatch.setattr(github_daily, "load_processed_repos", lambda: set())
+    monkeypatch.setattr(github_daily, "save_processed_repo", lambda repo: False)
+
+    assert github_daily.get_trending_repo() is None
+
+
+def test_get_trending_repos_records_source_metadata(monkeypatch):
+    """抓取结果要带上来源，便于排查和后续文章提示。"""
+    html = """
+    <article class="Box-row">
+      <h2><a href="/foo/bar">foo / bar</a></h2>
+      <p>a demo project</p>
+      <span itemprop="programmingLanguage">Python</span>
+      <span class="d-inline-block">1,234 stars today</span>
+      <a href="/foo/bar/stargazers">9,999</a>
+    </article>
+    """
+
+    class FakeResponse:
+        status_code = 200
+        text = html
+
+    monkeypatch.setattr(github_daily, "_fetch_with_retry", lambda *a, **k: FakeResponse())
+
+    source = {"id": "zh-daily", "label": "中文区日榜（中国）", "period": "daily",
+              "url": "https://github.com/trending?spoken_language_code=zh"}
+    repo = github_daily.get_trending_repos(source)[0]
+
+    assert repo["name"] == "foo/bar"
+    assert repo["url"] == "https://github.com/foo/bar"
+    assert repo["source"] == "zh-daily"
+    assert repo["source_label"] == "中文区日榜（中国）"
+    assert repo["period"] == "daily"
+    assert repo["today_stars"] == "1,234 stars today"
+
+
+def test_get_trending_repos_defaults_to_global_daily(monkeypatch):
+    seen = {}
+
+    class FakeResponse:
+        status_code = 200
+        text = '<article class="Box-row"><h2><a href="/a/b">a / b</a></h2></article>'
+
+    def fake_fetch(url, *a, **k):
+        seen["url"] = url
+        return FakeResponse()
+
+    monkeypatch.setattr(github_daily, "_fetch_with_retry", fake_fetch)
+    github_daily.get_trending_repos()
+
+    assert seen["url"] == "https://github.com/trending?since=daily"
+
+
+def test_extract_today_stars_supports_new_markup():
+    """GitHub 改版后去掉 float-sm-right，需要按文本兜底匹配。"""
+    html = """
+    <article class="Box-row">
+      <span class="d-inline-block">374 stars this week</span>
+    </article>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    assert github_daily._extract_today_stars(soup) == "374 stars this week"
+
+
+def test_extract_today_stars_returns_na_when_absent():
+    soup = BeautifulSoup('<article class="Box-row"></article>', "html.parser")
+    assert github_daily._extract_today_stars(soup) == "N/A"
+
+
+def test_get_trending_repo_respects_forced_source(isolated_csv, monkeypatch):
+    """GITHUB_TRENDING_SOURCE 可以强制只发指定来源。"""
+    monkeypatch.delenv("GITHUB_TRENDING_SOURCE", raising=False)
+    called = []
+    monkeypatch.setattr(
+        github_daily, "get_trending_repos",
+        lambda source: called.append(source["id"]) or [_repo("b/b")],
+    )
+    monkeypatch.setattr(github_daily, "load_processed_repos", lambda: set())
+
+    monkeypatch.setenv("GITHUB_TRENDING_SOURCE", "zh-daily")
+    repo = github_daily.get_trending_repo()
+
+    assert repo is not None
+    assert called == ["zh-daily"]
+
+
+def test_get_trending_repo_rejects_unknown_forced_source(isolated_csv, monkeypatch):
+    monkeypatch.delenv("GITHUB_TRENDING_SOURCE", raising=False)
+    monkeypatch.setattr(github_daily, "load_processed_repos", lambda: set())
+    monkeypatch.setattr(github_daily, "get_trending_repos", lambda source: pytest.fail("不应发起抓取"))
+
+    monkeypatch.setenv("GITHUB_TRENDING_SOURCE", "mars-daily")
+    assert github_daily.get_trending_repo() is None
+
+
+# ---------------- 提示词里的榜单来源 ----------------
+
+def test_build_prompt_includes_source_label():
+    prompt = _build_prompt({
+        "name": "a/b", "url": "https://github.com/a/b",
+        "desc": "x", "date": "2026-01-01",
+        "source_label": "中文区日榜（中国）", "period": "daily",
+    })
+    assert "榜单来源：中文区日榜（中国）" in prompt
+    assert "日榜（当日新增）" in prompt
+
+
+def test_build_prompt_marks_weekly_source():
+    prompt = _build_prompt({
+        "name": "a/b", "url": "https://github.com/a/b",
+        "desc": "x", "date": "2026-01-01",
+        "source_label": "中文区周榜（中国）", "period": "weekly",
+    })
+    assert "周榜（当周累计）" in prompt
+
+
+def test_build_prompt_without_source_metadata_is_backward_compatible():
+    """旧的 github_daily.json 没有来源字段时不能报错。"""
+    prompt = _build_prompt({
+        "name": "a/b", "url": "https://github.com/a/b",
+        "desc": "x", "date": "2026-01-01",
+    })
+    assert "榜单来源" not in prompt
+    assert "a/b" in prompt

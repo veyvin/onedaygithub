@@ -21,6 +21,11 @@ on:
         required: false
         default: ''
         type: string
+      trending_source:
+        description: '趋势来源（留空=自动依次降级：全球日榜→中国区→周榜→其他语言区）'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   build:
@@ -130,6 +135,8 @@ jobs:
 
       - name: Get trending repo and update CSV (local only)
         id: get_trending
+        env:
+          GITHUB_TRENDING_SOURCE: ${{ github.event.inputs.trending_source || '' }}
         run: |
           echo "=== 获取趋势仓库（CSV 仅在本地更新，提交留到发布成功后） ==="
           python github_daily.py

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import json
 import csv
 import os
+import re
 import time
 import traceback
 from datetime import datetime
@@ -12,6 +13,68 @@ CSV_FILE = "processed_repos.csv"
 # 抓取 GitHub Trending 的重试配置
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # 秒
+
+# Trending 抓取源，按优先级从高到低排列。
+#
+# GitHub 官方 Trending 页面没有「国家/地区」筛选，但保留了 spoken_language_code
+# 参数（按项目描述语言筛选）。国内项目绝大多数是中文描述，因此
+# spoken_language_code=zh 基本等价于「中国区趋势」。
+#
+# 每天的榜单只有十几个条目，被抓完是常态（表现为「所有趋势仓库都已处理过」）。
+# 因此按顺序遍历多个来源，取第一个还有未处理仓库的来源，
+# 既保证内容新鲜度（全球日榜每天都有新项目），也保证不会轻易「断更」。
+TRENDING_SOURCES = [
+    {
+        "id": "global-daily",
+        "label": "GitHub 全球日榜",
+        "period": "daily",
+        "url": "https://github.com/trending?since=daily",
+    },
+    {
+        "id": "zh-daily",
+        "label": "中文区日榜（中国）",
+        "period": "daily",
+        "url": "https://github.com/trending?since=daily&spoken_language_code=zh",
+    },
+    {
+        "id": "zh-weekly",
+        "label": "中文区周榜（中国）",
+        "period": "weekly",
+        "url": "https://github.com/trending?since=weekly&spoken_language_code=zh",
+    },
+    {
+        "id": "en-daily",
+        "label": "英文区日榜",
+        "period": "daily",
+        "url": "https://github.com/trending?since=daily&spoken_language_code=en",
+    },
+    {
+        "id": "global-weekly",
+        "label": "GitHub 全球周榜",
+        "period": "weekly",
+        "url": "https://github.com/trending?since=weekly",
+    },
+    {
+        "id": "ja-daily",
+        "label": "日文区日榜",
+        "period": "daily",
+        "url": "https://github.com/trending?since=daily&spoken_language_code=ja",
+    },
+    {
+        "id": "de-daily",
+        "label": "德文区日榜",
+        "period": "daily",
+        "url": "https://github.com/trending?since=daily&spoken_language_code=de",
+    },
+    {
+        "id": "es-daily",
+        "label": "西文区日榜",
+        "period": "daily",
+        "url": "https://github.com/trending?since=daily&spoken_language_code=es",
+    },
+]
+
+DEFAULT_SOURCE = TRENDING_SOURCES[0]
 
 
 def load_processed_repos():
@@ -117,17 +180,48 @@ def _extract_repo_language(repo):
     return "N/A"
 
 
+_STARS_PERIOD_RE = re.compile(r"([\d,]+)\s+stars?\s+(today|this week|this month)", re.IGNORECASE)
+
+
 def _extract_today_stars(repo):
-    """从 trending 页面条目中提取今日新增 star 数。"""
+    """从 trending 页面条目中提取区间内新增的 star 数。
+
+    GitHub 改版后不再使用 `d-inline-none float-sm-right` 这个 class，
+    改为 `span.d-inline-block` 里的纯文本（如 "1,552 stars today"），
+    因此这里先按旧 class 找，找不到再按文本兜底匹配。
+    """
     today_tag = repo.find("span", class_="d-inline-none float-sm-right")
     if today_tag:
         return today_tag.get_text(strip=True)
+
+    for tag in repo.find_all("span", class_="d-inline-block"):
+        text = tag.get_text(" ", strip=True)
+        if _STARS_PERIOD_RE.search(text):
+            return text
+
+    for text in repo.find_all(string=True):
+        match = _STARS_PERIOD_RE.search(str(text))
+        if match:
+            return match.group(0)
     return "N/A"
 
 
-def get_trending_repos():
-    """获取所有趋势仓库"""
-    url = "https://github.com/trending"
+def get_trending_repos(source=None):
+    """获取某个来源的趋势仓库列表。
+
+    source 可以是 TRENDING_SOURCES 中的一项、包含 url 的字典，或直接的 URL 字符串；
+    省略时使用优先级最高的全球日榜。
+    """
+    if source is None:
+        source = DEFAULT_SOURCE
+    if isinstance(source, str):
+        source = {"id": "custom", "label": source, "period": "daily", "url": source}
+
+    url = source["url"]
+    source_id = source.get("id", "custom")
+    source_label = source.get("label", url)
+    period = source.get("period", "daily")
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
@@ -135,14 +229,14 @@ def get_trending_repos():
     try:
         response = _fetch_with_retry(url, headers, timeout=30)
         if response is None or response.status_code != 200:
-            print(f"Failed to fetch GitHub Trending after {MAX_RETRIES} retries")
+            print(f"Failed to fetch {source_label} after {MAX_RETRIES} retries")
             return None
 
         soup = BeautifulSoup(response.text, "html.parser")
         repos = soup.find_all("article", class_="Box-row")
 
         if not repos:
-            print("No repositories found.")
+            print(f"{source_label}: No repositories found.")
             return None
 
         repo_list = []
@@ -165,7 +259,10 @@ def get_trending_repos():
                     "stars": stars,
                     "language": _extract_repo_language(repo),
                     "today_stars": _extract_today_stars(repo),
-                    "date": datetime.now().strftime("%Y-%m-%d")
+                    "date": datetime.now().strftime("%Y-%m-%d"),
+                    "source": source_id,
+                    "source_label": source_label,
+                    "period": period
                 })
             except Exception as e:
                 print(f"解析仓库信息时出错: {e}")
@@ -174,30 +271,69 @@ def get_trending_repos():
         return repo_list
 
     except Exception as e:
-        print(f"Error fetching trending repo: {e}")
+        print(f"Error fetching trending repo from {source_label}: {e}")
         return None
 
-def get_trending_repo():
-    """获取第一个未处理过的趋势仓库"""
-    processed_repos = load_processed_repos()
-    repo_list = get_trending_repos()
 
-    if not repo_list:
-        return None
-
-    # 遍历趋势列表，找到第一个未处理过的仓库
+def _pick_unprocessed(repo_list, processed_repos):
+    """返回列表中第一个未处理的仓库；全部处理过则返回 None。"""
     for repo in repo_list:
         if repo['url'] not in processed_repos:
-            print(f"找到未处理的仓库: {repo['name']} ({repo['url']})")
-            # 保存到 CSV；保存失败则中止本次处理以避免重复发布
-            if not save_processed_repo(repo):
-                print(f"❌ 保存仓库到 CSV 失败，跳过本次处理以避免重复发布")
-                return None
             return repo
-        else:
-            print(f"仓库已处理过，跳过: {repo['name']} ({repo['url']})")
+        print(f"仓库已处理过，跳过: {repo['name']} ({repo['url']})")
+    return None
 
-    print("所有趋势仓库都已处理过")
+
+def get_trending_repo():
+    """获取第一个未处理过的趋势仓库。
+
+    按 TRENDING_SOURCES 的顺序遍历来源：某个来源的榜单被处理完后自动降级到下一个
+    （例如全球日榜抓完 → 中文区日榜 → 中文区周榜 → 其他语言区）。
+
+    设置环境变量 GITHUB_TRENDING_SOURCE=<来源 id> 可强制只使用指定来源，
+    例如 GITHUB_TRENDING_SOURCE=zh-daily 强制只发中国区趋势。
+    """
+    processed_repos = load_processed_repos()
+    sources = TRENDING_SOURCES
+
+    forced = os.getenv("GITHUB_TRENDING_SOURCE", "").strip()
+    if forced:
+        selected = [s for s in TRENDING_SOURCES if s["id"] == forced]
+        if not selected:
+            valid = ", ".join(s["id"] for s in TRENDING_SOURCES)
+            print(f"❌ 未知的来源 id: {forced}（可选: {valid}）")
+            return None
+        sources = selected
+        print(f"=== 已指定来源，仅使用: {selected[0]['label']} ===")
+
+    exhausted = []
+
+    for index, source in enumerate(sources):
+        label = source.get("label", source.get("id", source.get("url")))
+
+        print(f"=== 尝试来源 {index + 1}/{len(sources)}: {label} ===")
+        repo_list = get_trending_repos(source)
+
+        if not repo_list:
+            print(f"{label}: 未获取到数据")
+            continue
+
+        repo = _pick_unprocessed(repo_list, processed_repos)
+        if repo is None:
+            exhausted.append(label)
+            print(f"{label}: 榜单内 {len(repo_list)} 个仓库均已处理过，降级到下一个来源")
+            continue
+
+        print(f"找到未处理的仓库: {repo['name']} ({repo['url']}) [来源: {label}]")
+        # 保存到 CSV；保存失败则中止本次处理以避免重复发布
+        if not save_processed_repo(repo):
+            print(f"❌ 保存仓库到 CSV 失败，跳过本次处理以避免重复发布")
+            return None
+        return repo
+
+    if exhausted:
+        print(f"已耗尽的来源: {', '.join(exhausted)}")
+    print("所有趋势来源都已处理过")
     return None
 
 def save_to_json(data, file_path="github_daily.json"):
@@ -209,7 +345,9 @@ if __name__ == "__main__":
     repo_info = get_trending_repo()
     if repo_info:
         save_to_json(repo_info)
-        print(f"今日推荐: {repo_info['name']}")
+        print(f"今日推荐: {repo_info['name']}（来源: {repo_info.get('source_label', '未知')}）")
     else:
+        # 所有来源都取不到新仓库时必须非零退出：否则 workflow 会继续用 checkout
+        # 里的旧 github_daily.json 跑发布，导致重复发文。
         print("未能获取 Trending 数据")
         exit(1)
