@@ -4,7 +4,7 @@ import re
 import sys
 import requests
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # 默认分类和标签（可被 post_data 中的 categories/tags 覆盖）
 DEFAULT_CATEGORIES = ["GitHub Trending", "开源项目"]
@@ -325,6 +325,16 @@ def get_beijing_time(date_str):
     beijing_date = utc_date + timedelta(hours=8)
     return beijing_date
 
+
+# 东八区（北京时间 / UTC+8）。服务器时区可能是 UTC，直接用 UTC 墙钟时间会让
+# 文章发布时间整体偏 8 小时，所以这里显式使用带时区的东八区时间。
+BEIJING_TZ = timezone(timedelta(hours=8))
+
+
+def now_beijing() -> datetime:
+    """当前真实的北京时间（带 UTC+8 时区信息，非UTC 墙钟时间）"""
+    return datetime.now(BEIJING_TZ)
+
 def generate_unique_slug(repo_name, date_str):
     """生成唯一的 slug，使用项目名称作为后缀"""
     # 获取当前的北京时间
@@ -381,10 +391,14 @@ def publish_to_halo(post_data):
     tag_names = raw_tags if isinstance(raw_tags, list) else DEFAULT_TAGS
 
     # 生成唯一的 slug
-    slug, previous_date_str = generate_unique_slug(repo_info['name'], repo_info['date'])
+    slug, _ = generate_unique_slug(repo_info['name'], repo_info['date'])
+
+    # 发布时间使用「真实的当前北京时间」，而不是从抓取日期推导出来的固定 08:00
+    publish_dt = now_beijing()
 
     print(f"生成的唯一 slug: {slug}")
-    print(f"发布日期: {previous_date_str}")
+    print(f"抓取日期 (UTC): {repo_info['date']}")
+    print(f"发布时间 (北京时间 UTC+8): {publish_dt.strftime('%Y-%m-%d %H:%M:%S')}")
 
     headers = build_headers(HALO_TOKEN)
 
@@ -405,8 +419,8 @@ def publish_to_halo(post_data):
                 "cover": "",
                 "deleted": False,
                 "publish": True,
-                # 使用当前的北京时间（早上8点）
-                "publishTime": f"{previous_date_str}T08:00:00+08:00",
+                # 使用真实的当前北京时间（UTC+8），例如 2026-10-18T00:05:12+08:00
+                "publishTime": publish_dt.isoformat(timespec="seconds"),
                 "pinned": False,
                 "allowComment": True,
                 "visible": "PUBLIC",
@@ -446,8 +460,8 @@ def publish_to_halo(post_data):
             print("✅ 文章发布到 Halo 成功！")
             print(f"📝 文章标题: {title}")
             print(f"🔗 文章 slug: {slug}")
-            print(f"📅 GitHub 原始日期: {repo_info['date']}")
-            print(f"🕗 发布时间 (北京时间): {previous_date_str}T08:00:00+08:00")
+            print(f"📅 GitHub 抓取日期 (UTC): {repo_info['date']}")
+            print(f"🕗 发布时间 (北京时间): {publish_dt.strftime('%Y-%m-%d %H:%M:%S')} (UTC+8)")
             print(f"🏷️ 文章分类: {category_names}")
             print(f"🏷️ 文章标签: {tag_names}")
             print(f"📂 项目名称: {repo_info['name']}")
@@ -537,7 +551,7 @@ def main():
     
     if result:
         print("\n🎉 自动化流程完成！文章已成功发布到 Halo")
-        print("✅ 文章已设置为当天发布")
+        print("✅ 文章已按当前北京时间发布")
         print("✅ 包含指定的自动化标签")
         print("✅ 使用唯一 slug 避免重复")
         return 0

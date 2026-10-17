@@ -5,7 +5,7 @@
     pytest tests/ -v
 """
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -23,6 +23,8 @@ from publish_to_halo import (
     generate_unique_slug,
     get_beijing_time,
     halo_request,
+    now_beijing,
+    publish_to_halo as publish_post,
     CloudflareChallengeError,
     HaloAuthError,
 )
@@ -176,7 +178,7 @@ def test_get_beijing_time_adds_eight_hours():
 
 # ------------------ publish_to_halo.py: 请求层（Cloudflare 防护） ------------------
 
-def _fake_response(status_code=200, headers=None, text=""):
+def _fake_response(status_code=200, headers=None, text="", json_body=None):
     """构造一个只带必要属性的假响应对象。"""
     return type(
         "FakeResponse",
@@ -185,6 +187,7 @@ def _fake_response(status_code=200, headers=None, text=""):
             "status_code": status_code,
             "headers": headers or {},
             "text": text,
+            "json": lambda self: (json_body if json_body is not None else {}),
         },
     )()
 
@@ -269,6 +272,55 @@ def test_halo_request_returns_ok_response(monkeypatch):
     )
     resp = halo_request("GET", "https://example.com/apis/x", build_headers("pat-x"))
     assert resp.status_code == 200
+
+
+# ------------------ publish_to_halo.py: 发布时间（真实东八区时间） ------------------
+
+def test_now_beijing_uses_utc_plus_8_offset():
+    dt = now_beijing()
+    assert dt.tzinfo is not None
+    assert dt.utcoffset() == timedelta(hours=8)
+
+
+def test_now_beijing_reflects_current_instant_not_local_wall_clock():
+    """GitHub Actions 跑在 UTC，若读本地墙钟时间，发布时间会整体偏 8 小时。
+
+    换算回 UTC 后应与「当前真实时刻」一致，说明是时刻换算而非墙钟时间。
+    """
+    dt = now_beijing()
+    drift = dt.astimezone(timezone.utc) - datetime.now(timezone.utc)
+    assert abs(drift.total_seconds()) < 5
+
+
+def test_publish_payload_uses_real_beijing_publish_time(monkeypatch):
+    """publishTime 必须是真实的当前北京时间，而不是固定 08:00。"""
+    captured = {}
+
+    def fake_halo_request(method, url, headers, **kwargs):
+        captured.update(kwargs)
+        return _fake_response(200, {}, json_body={"metadata": {"name": "post-1"}})
+
+    monkeypatch.setattr(publish_to_halo, "halo_request", fake_halo_request)
+    monkeypatch.setattr(
+        publish_to_halo, "resolve_categories_and_tags",
+        lambda *args, **kwargs: (["cat-id"], ["tag-id"]),
+    )
+    monkeypatch.setenv("HALO_TOKEN", "pat-x")
+
+    post_data = {
+        "repo_info": {"name": "owner/repo", "date": "2026-10-17"},
+        "title": "标题",
+        "content": "<p>正文</p>",
+    }
+    assert publish_post(post_data) is not None
+
+    publish_time = captured["json"]["post"]["spec"]["publishTime"]
+    # Halo 期望的 ISO-8601 带时区格式
+    dt = datetime.strptime(publish_time, "%Y-%m-%dT%H:%M:%S%z")
+    assert dt.utcoffset() == timedelta(hours=8)
+    drift = dt.astimezone(timezone.utc) - datetime.now(timezone.utc)
+    assert abs(drift.total_seconds()) < 60
+    assert not publish_time.endswith("T08:00:00+08:00")
 
 
 # ----------------------------- github_daily.py -----------------------------
