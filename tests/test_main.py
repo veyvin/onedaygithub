@@ -13,6 +13,8 @@ import github_daily
 from generate_post import (
     extract_title_and_content,
     format_code_blocks,
+    strip_emoji,
+    strip_leading_title,
     _derive_tags_from_repo,
 )
 import publish_to_halo
@@ -31,6 +33,63 @@ from publish_to_halo import (
 
 
 # ----------------------------- generate_post.py -----------------------------
+
+# ---------------- 公众号标题：去除 emoji ----------------
+
+def test_strip_emoji_removes_leading_and_trailing_emoji():
+    assert strip_emoji("🚀 LinkSwift：八大网盘直链工具") == "LinkSwift：八大网盘直链工具"
+    assert strip_emoji("Ghidra 框架探索之旅 🛠️🔍") == "Ghidra 框架探索之旅"
+
+
+def test_strip_emoji_keeps_chinese_punctuation_and_ascii():
+    t = "android/skills：当官方仓库聊「技能」时 🤖"
+    assert strip_emoji(t) == "android/skills：当官方仓库聊「技能」时"
+    # 纯 ASCII 标题原样返回
+    assert strip_emoji("Hello-World/repo: plain title") == "Hello-World/repo: plain title"
+
+
+def test_strip_emoji_handles_flag_and_zwj_sequences():
+    # 国旗由两个区域指示符组成，VS16/ZWJ 组合也要整体去掉
+    assert strip_emoji("🇨🇳 技巧 ✍️") == "技巧"
+    assert strip_emoji("🛠️ 工具") == "工具"
+
+
+def test_strip_emoji_handles_empty_input():
+    assert strip_emoji("") == ""
+    assert strip_emoji(None) == ""
+
+
+def test_strip_emoji_does_not_strip_normal_dash():
+    assert strip_emoji("Rust — 3 分钟上手") == "Rust — 3 分钟上手"
+
+
+# ---------------- 正文：只去掉重复标题，不插入任何卡片 ----------------
+
+def test_strip_leading_title_removes_duplicate_title_line():
+    out = strip_leading_title("🚀 标题：正文\n<p>第一段</p>", "🚀 标题：正文")
+    assert out == "<p>第一段</p>"
+
+
+def test_strip_leading_title_handles_h1_and_blank_lines():
+    out = strip_leading_title("\n\n<h1>标题</h1>\n<p>正文</p>", "标题")
+    assert out == "<p>正文</p>"
+
+
+def test_strip_leading_title_keeps_body_when_no_duplicate():
+    content = "<p>正文第一段</p>\n<p>正文第二段</p>"
+    assert strip_leading_title(content, "标题") == content
+
+
+def test_strip_leading_title_handles_empty_content():
+    assert strip_leading_title("", "标题") == ""
+
+
+def test_content_is_not_modified_with_extra_blocks():
+    """正文只做去重标题，不得被插入项目信息卡片等额外内容。"""
+    out = strip_leading_title("🚀 标题\n<p>正文</p>", "🚀 标题")
+    assert "<div" not in out
+    assert "<table" not in out
+    assert out == "<p>正文</p>"
 
 def test_format_code_blocks_converts_fenced_code_with_language():
     src = "前\n```python\nprint('hi')\n```\n后"

@@ -16,7 +16,8 @@
 
 - 🔥 **每日 Trending 抓取**：使用 `requests` + `BeautifulSoup` 抓取 GitHub Trending 页面，解析仓库名、链接、描述、Star 数等关键信息。
 - 🧠 **DeepSeek AI 写稿**：调用 DeepSeek 大模型，根据项目特点动态选择 6 种文章结构模板（故事型 / 对比型 / 技术深度型 / 场景驱动型 / 探索发现型 / 问题解决型），让每天的推荐都不重样。
-- 📝 **HTML 内容生成**：文章以 HTML 格式输出，标题带 emoji，所有 `<h2>/<h3>` 都带 `id` 锚点，方便阅读与目录跳转。
+- 📝 **HTML 内容生成**：文章以 HTML 格式输出，所有 `<h2>/<h3>` 都带 `id` 锚点，方便阅读与目录跳转。正文不插入任何额外信息卡片，只去掉与标题重复的首行。
+- 💬 **公众号标题兼容**：站内标题保留 emoji，同时产出 `title_clean`（纯文字、无 emoji、保留中文标点）备用标题，供公众号/投稿使用。
 - 🏷️ **自动分类与标签**：自动确保 Halo 中存在对应的分类（`GitHub Trending`、`开源项目`）与标签（`GitHub`、`Trending`、`自动发布` 等），并按项目名/描述智能推导技术关键词标签。
 - 🗂️ **去重机制**：通过 `processed_repos.csv` 记录已经处理过的仓库 URL，避免短期内重复推荐。
 - ⏰ **按真实东八区时间发布**：`publishTime` 取发布时刻真实的北京时间（UTC+8），形如 `2026-10-18T00:05:12+08:00`。GitHub Actions 跑在 UTC，若直接取服务器本地时间会整体偏 8 小时，故显式使用 `datetime.now(timezone(timedelta(hours=8)))`。
@@ -109,6 +110,26 @@ flowchart LR
 - 解决 Halo 中文章名称重复的问题；
 - 同一项目同一天不会重复发布；
 - 跨天复用同一项目时也能保证唯一性。
+
+### 标题处理与公众号兼容
+**1. 去掉重复标题**
+模型会把标题写在正文第一行，`extract_title_and_content()` 取走标题后这一行原本仍留在正文里，
+导致页面上标题显示两次。现在正文从标题的下一行开始；完整 HTML 返回值里残留的 `<h1>`
+也会被 `strip_leading_title()` 移除。正文不会插入任何额外的信息卡片。
+
+**2. 公众号标题**
+站内（Halo）标题保留 emoji 以保持活泼感；同时由 `strip_emoji()` 产出一份纯文字标题，
+存入 `generated_post.json` 的 `title_clean`，供公众号/投稿使用：
+
+```
+站内标题   : 🚀 LinkSwift：一个 JavaScript 脚本，把八大网盘直接连起来
+title_clean: LinkSwift：一个 JavaScript 脚本，把八大网盘直接连起来
+```
+
+`strip_emoji()` 只删 emoji 与装饰符号（含 VS16 / ZWJ / 国旗双码点），
+中文标点（`：、「」“”`）、破折号 `—`、ASCII 全部保留。
+
+> 公众号标题另有 64 字上限，导出时需要再截断；当前只做去 emoji，暂未截断。
 
 ### 发布时间（真实东八区时间）
 `now_beijing()` 返回带时区的当前北京时间，`publishTime` 直接使用它的 ISO-8601 表达：

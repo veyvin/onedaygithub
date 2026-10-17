@@ -13,6 +13,82 @@ except ImportError:
     BeautifulSoup = None
     print("警告: 未安装 BeautifulSoup，HTML 解析将退化为正则表达式")
 
+
+# Python 的 re 不支持 \p{Emoji}，用码位区间覆盖常见 emoji
+EMOJI_RE = re.compile(
+    "["
+    "←-⇿"          # 箭头
+    "⌀-⏿"          # 各类技术符号
+    "①-⓿"          # 带圈数字
+    "■-➿"          # 几何图形 + 杂项符号 + 装饰符号（⚡ ⚖️ 等）
+    "⬀-⯿"          # 杂项符号与箭头补充
+    "\U0001F004"
+    "\U0001F0CF"
+    "\U0001F170-\U0001F251"
+    "〰〽㊗㊙"
+    "\U0001F1E6-\U0001F1FF"  # 国旗（区域指示符）
+    "\U0001F300-\U0001F5FF"  # 符号与象形文字
+    "\U0001F600-\U0001F64F"  # 表情符号
+    "\U0001F680-\U0001F6FF"  # 交通与地图符号（🛠️ 🚀 等）
+    "\U0001F700-\U0001F77F"
+    "\U0001F900-\U0001F9FF"  # 补充符号与象形文字（🧭 💡 等）
+    "\U0001FA00-\U0001FAFF"  # 符号与象形文字扩展 A
+    "️"                # 变体选择符 VS16
+    "‍"                # 零宽连接符 ZWJ
+    "]+"
+)
+
+
+def strip_emoji(text):
+    """去掉标题中的 emoji / 装饰符号，得到公众号可用的纯文字标题。
+
+    站内（Halo）标题保留 emoji，这里只产出备用标题，不影响原标题。
+    """
+    if not text:
+        return ""
+    cleaned = EMOJI_RE.sub("", str(text))
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    # 删掉 emoji 后可能残留的悬空标点/空白，例如 "🚀 Foo 🛠️" -> "Foo"
+    cleaned = re.sub(r"^[\s\-–—|:：,，、·]+", "", cleaned)
+    cleaned = re.sub(r"[\s\-–—|:：,，、·]+$", "", cleaned)
+    return cleaned.strip()
+
+
+def strip_leading_title(content, title):
+    """去掉正文中与文章标题重复的开头内容。
+
+    两种来源：
+    - 模型把标题写在第一行纯文本（非完整 HTML 路径）；
+    - 完整 HTML 路径下 <h1> 标题仍留在 body 里。
+    两者都会让标题在页面上显示两次。
+    """
+    if not content:
+        return content
+
+    body = content.strip()
+    title_norm = re.sub(r"\s+", "", title or "")
+    if not title_norm:
+        return body
+
+    # 1) 开头的 <h1>…</h1>
+    h1 = re.match(r"^<h1[^>]*>(.*?)</h1>\s*", body, re.IGNORECASE | re.DOTALL)
+    if h1:
+        h1_text = re.sub(r"<[^>]+>", "", h1.group(1)).strip()
+        if re.sub(r"\s+", "", h1_text) == title_norm:
+            return body[h1.end():].strip() or body
+
+    # 2) 开头的纯文本标题行（允许中间夹空行）
+    lines = body.split("\n")
+    for i, line in enumerate(lines[:3]):
+        plain = re.sub(r"<[^>]+>", "", line).strip()
+        if not plain:
+            continue
+        if re.sub(r"\s+", "", plain) == title_norm:
+            return "\n".join(lines[i + 1:]).strip() or body
+        break
+
+    return body
+
 def read_repo_data():
     """读取 GitHub Trending 数据"""
     try:
@@ -78,17 +154,24 @@ def extract_title_and_content(full_content):
     # 非完整 HTML：尝试提取第一行作为标题
     lines = full_content.strip().split('\n')
     title = ""
-    content = full_content
+    title_index = -1
 
     # 找第一个有意义的行作为标题
-    for line in lines:
+    for i, line in enumerate(lines):
         clean_line = line.strip()
         if clean_line and len(clean_line) < 100:  # 标题不会太长
             # 移除 HTML 标签
             clean_title = re.sub(r'<[^>]+>', '', clean_line)
             if clean_title and len(clean_title) > 5:
                 title = clean_title
+                title_index = i
                 break
+
+    # 标题行不属于正文：正文从标题之后开始，否则页面上标题会出现两次
+    if title_index >= 0:
+        content = '\n'.join(lines[title_index + 1:]).strip()
+    else:
+        content = full_content
 
     return title, content
 
@@ -427,6 +510,8 @@ def save_generated_post(title, content, repo_data, categories=None, tags=None):
 
     post_data = {
         "title": title,
+        # 站内标题保留 emoji；这份纯文字标题供公众号/投稿使用
+        "title_clean": strip_emoji(title),
         "content": content,
         "repo_info": repo_data,
         "categories": final_categories,
@@ -452,10 +537,13 @@ if __name__ == "__main__":
     title, content = generate_post_with_deepseek(repo_data)
     
     if title and content:
+        # 去掉正文中与标题重复的首行（标题已在页面上单独展示）
+        content = strip_leading_title(content, title)
         # 保存生成的文章
         save_generated_post(title, content, repo_data)
         print("文章生成成功！")
         print(f"标题: {title}")
+        print(f"公众号标题（无 emoji）: {strip_emoji(title)}")
         print(f"文章长度: {len(content)} 字符")
     else:
         print("文章生成失败")
