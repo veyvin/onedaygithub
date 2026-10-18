@@ -1,12 +1,12 @@
 {
-  "name": "OI-wiki/OI-wiki",
-  "url": "https://github.com/OI-wiki/OI-wiki",
-  "desc": "🌟 Wiki of OI / ICPC for everyone. （某大型游戏线上攻略，内含炫酷算术魔法）",
-  "stars": "26,886",
+  "name": "stablyai/orca",
+  "url": "https://github.com/stablyai/orca",
+  "desc": "Orca is the place for working with a fleet of agents (e.g. Grok Bot, Claude Code). Run any coding agent with your own subscription. Available on desktop, mobile and remote runtime.",
+  "stars": "96,358",
   "language": "TypeScript",
-  "today_stars": "10 stars today",
-  "date": "2026-10-17",
-  "source": "zh-daily",
-  "source_label": "中文区日榜（中国）",
+  "today_stars": "1,146 stars today",
+  "date": "2026-10-18",
+  "source": "global-daily",
+  "source_label": "GitHub 全球日榜",
   "period": "daily"
 }
