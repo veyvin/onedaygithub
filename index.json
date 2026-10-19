@@ -1,11 +1,11 @@
 {
-  "name": "stablyai/orca",
-  "url": "https://github.com/stablyai/orca",
-  "desc": "Orca is the place for working with a fleet of agents (e.g. Grok Bot, Claude Code). Run any coding agent with your own subscription. Available on desktop, mobile and remote runtime.",
-  "stars": "96,358",
-  "language": "TypeScript",
-  "today_stars": "1,146 stars today",
-  "date": "2026-10-18",
+  "name": "Comfy-Org/ComfyUI",
+  "url": "https://github.com/Comfy-Org/ComfyUI",
+  "desc": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface. The fastest local inference engine in the world.",
+  "stars": "139,570",
+  "language": "Python",
+  "today_stars": "1,011 stars today",
+  "date": "2026-10-19",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
