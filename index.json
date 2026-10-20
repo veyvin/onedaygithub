@@ -1,11 +1,11 @@
 {
-  "name": "Comfy-Org/ComfyUI",
-  "url": "https://github.com/Comfy-Org/ComfyUI",
-  "desc": "The most powerful and modular diffusion model GUI, api and backend with a graph/nodes interface. The fastest local inference engine in the world.",
-  "stars": "139,570",
+  "name": "Graphify-Labs/graphify",
+  "url": "https://github.com/Graphify-Labs/graphify",
+  "desc": "Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.",
+  "stars": "130,008",
   "language": "Python",
-  "today_stars": "1,011 stars today",
-  "date": "2026-10-19",
+  "today_stars": "906 stars today",
+  "date": "2026-10-20",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
