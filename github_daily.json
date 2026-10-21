@@ -1,11 +1,11 @@
 {
-  "name": "Graphify-Labs/graphify",
-  "url": "https://github.com/Graphify-Labs/graphify",
-  "desc": "Turn any codebase, with its docs, SQL schemas, configs, and PDFs, into a queryable knowledge graph. A /graphify skill for Claude Code, Cursor, Codex, and Gemini CLI: local deterministic AST parsing, every edge explained, no vector store.",
-  "stars": "130,008",
+  "name": "vllm-project/vllm",
+  "url": "https://github.com/vllm-project/vllm",
+  "desc": "A high-throughput and memory-efficient inference and serving engine for LLMs",
+  "stars": "94,798",
   "language": "Python",
-  "today_stars": "906 stars today",
-  "date": "2026-10-20",
+  "today_stars": "439 stars today",
+  "date": "2026-10-21",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
