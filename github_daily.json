@@ -1,11 +1,11 @@
 {
-  "name": "vllm-project/vllm",
-  "url": "https://github.com/vllm-project/vllm",
-  "desc": "A high-throughput and memory-efficient inference and serving engine for LLMs",
-  "stars": "94,798",
-  "language": "Python",
-  "today_stars": "439 stars today",
-  "date": "2026-10-21",
+  "name": "php/php-src",
+  "url": "https://github.com/php/php-src",
+  "desc": "The PHP Interpreter",
+  "stars": "41,047",
+  "language": "C",
+  "today_stars": "423 stars today",
+  "date": "2026-10-22",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
