@@ -1,11 +1,11 @@
 {
-  "name": "aws/agent-toolkit-for-aws",
-  "url": "https://github.com/aws/agent-toolkit-for-aws",
-  "desc": "Official, AWS-supported MCP servers, skills, and plugins to help AI agents build on AWS",
-  "stars": "3,051",
-  "language": "Python",
-  "today_stars": "11 stars today",
-  "date": "2026-10-24",
+  "name": "makecindy/cindy",
+  "url": "https://github.com/makecindy/cindy",
+  "desc": "Consider it done. The open-source AI agent that works out of the box · 想到，就能做到。开源、开箱即用的 AI Agent。",
+  "stars": "4,704",
+  "language": "TypeScript",
+  "today_stars": "677 stars today",
+  "date": "2026-10-25",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
