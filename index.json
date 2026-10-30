@@ -1,11 +1,11 @@
 {
-  "name": "milind-soni/OpenMausBot",
-  "url": "https://github.com/milind-soni/OpenMausBot",
-  "desc": "Open-source Grok Bot alternative with a virtual machine that bots can use",
-  "stars": "7,364",
+  "name": "CopilotKit/OpenBot",
+  "url": "https://github.com/CopilotKit/OpenBot",
+  "desc": "Open-source AI coworkers that each get a computer of their own: a browser, files and tools, with every action decided before it happens and recorded after. Bring any AG-UI agent.",
+  "stars": "8,674",
   "language": "TypeScript",
-  "today_stars": "1,190 stars today",
-  "date": "2026-10-29",
+  "today_stars": "707 stars today",
+  "date": "2026-10-30",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
