@@ -1,11 +1,11 @@
 {
-  "name": "CopilotKit/OpenBot",
-  "url": "https://github.com/CopilotKit/OpenBot",
-  "desc": "Open-source AI coworkers that each get a computer of their own: a browser, files and tools, with every action decided before it happens and recorded after. Bring any AG-UI agent.",
-  "stars": "8,674",
-  "language": "TypeScript",
-  "today_stars": "707 stars today",
-  "date": "2026-10-30",
+  "name": "Donchitos/Claude-Code-Game-Studios",
+  "url": "https://github.com/Donchitos/Claude-Code-Game-Studios",
+  "desc": "Turn Claude Code into a full game dev studio — 49 AI agents, 72 workflow skills, and a complete coordination system mirroring real studio hierarchy.",
+  "stars": "31,022",
+  "language": "Shell",
+  "today_stars": "1,347 stars today",
+  "date": "2026-10-31",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
