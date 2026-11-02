@@ -224,7 +224,11 @@ def _build_prompt(repo_data):
     """构建博客文章的提示词，供所有提供商共用。"""
     name = repo_data.get('name')
     url = repo_data.get('url')
-    desc = repo_data.get('desc') or 'No description'
+    raw_desc = repo_data.get('desc')
+    desc = raw_desc.strip() if isinstance(raw_desc, str) and raw_desc.strip() else ''
+    if desc.lower() in ('no description', 'no description provided', 'none'):
+        desc = ''
+    desc_display = desc if desc else '（项目未提供描述）'
     date = repo_data.get('date')
 
     seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
@@ -269,12 +273,12 @@ def _build_prompt(repo_data):
     selected_structure = structure_templates[seed]
 
     prompt = f"""
-请为今天的 GitHub Trending 每日推荐项目写一篇技术博客文章。
+请为今天的热门开源项目写一篇技术博客文章。
 
 项目信息（仅基于以下真实信息写作，不要编造未提供的技术细节、数据或对比）：
 - 项目名称：{name}
 - 项目地址：{url}
-- 项目描述：{desc}
+- 项目描述：{desc_display}
 - 推荐日期：{date}
 {source_line}
 
@@ -304,6 +308,8 @@ def _build_prompt(repo_data):
 7. 直接返回文章内容，不要有其他说明文字
 8. 使用专业但易懂的技术语言，要有趣味性和可读性
 9. 添加一些代码以增加可读性和趣味性，添加一些适当的图标如 📦 🚀 🛠️ 等以增加趣味性
+10. 不要提及项目来自哪个榜单、排名或趋势信息，也不要解释项目的来源
+11. 不要出现描述缺失的占位词，也不要围绕"没有描述/零描述"做评论或玩梗；信息不足时如实说明
 
 🖼️ 图片生成要求（如果模型支持图片输出）：
 - 如果你的模型支持生成图片，请在文章中适当位置（通常 2-3 处）生成与文章内容紧密相关的配图
@@ -389,7 +395,7 @@ def generate_post_with_cursor_sdk(repo_data, provider):
         title, content = extract_title_and_content(raw_content)
 
         if not title:
-            title = f"GitHub Trending 推荐：{name}"
+            title = f"{name}：项目解析"
 
         content = format_code_blocks(content)
 
@@ -472,7 +478,7 @@ def generate_post_with_deepseek(repo_data):
             
             # 如果提取失败，使用默认标题
             if not title:
-                title = f"GitHub Trending 推荐：{name}"
+                title = f"{name}：项目解析"
             
             # 格式化代码块 - 将 ``` 转换为 HTML
             content = format_code_blocks(content)
