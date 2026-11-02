@@ -1,11 +1,11 @@
 {
-  "name": "pingdotgg/t3code",
-  "url": "https://github.com/pingdotgg/t3code",
-  "desc": "No description",
-  "stars": "37,470",
-  "language": "TypeScript",
-  "today_stars": "3,100 stars today",
-  "date": "2026-11-01",
+  "name": "public-apis/public-apis",
+  "url": "https://github.com/public-apis/public-apis",
+  "desc": "A collective list of free APIs",
+  "stars": "494,900",
+  "language": "Python",
+  "today_stars": "324 stars today",
+  "date": "2026-11-02",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
