@@ -1,11 +1,11 @@
 {
-  "name": "vercel-labs/agent-desktop",
-  "url": "https://github.com/vercel-labs/agent-desktop",
-  "desc": "Computer use CLI for AI agents",
-  "stars": "9,486",
+  "name": "max-sixty/worktrunk",
+  "url": "https://github.com/max-sixty/worktrunk",
+  "desc": "Worktrunk is a CLI for Git worktree management, designed for parallel AI agent workflows",
+  "stars": "10,426",
   "language": "Rust",
-  "today_stars": "2,243 stars today",
-  "date": "2026-11-02",
+  "today_stars": "437 stars today",
+  "date": "2026-11-03",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
