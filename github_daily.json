@@ -1,11 +1,11 @@
 {
-  "name": "garrytan/gstack",
-  "url": "https://github.com/garrytan/gstack",
-  "desc": "Use Garry Tan's exact Claude Code setup: 23 opinionated tools that serve as CEO, Designer, Eng Manager, Release Manager, Doc Engineer, and QA",
-  "stars": "139,893",
-  "language": "TypeScript",
-  "today_stars": "608 stars today",
-  "date": "2026-11-05",
+  "name": "zed-industries/zed",
+  "url": "https://github.com/zed-industries/zed",
+  "desc": "Code at the speed of thought – Zed is a high-performance, multiplayer code editor from the creators of Atom and Tree-sitter.",
+  "stars": "93,788",
+  "language": "Rust",
+  "today_stars": "306 stars today",
+  "date": "2026-11-07",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
