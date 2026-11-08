@@ -1,11 +1,11 @@
 {
-  "name": "vercel-labs/agent-browser",
-  "url": "https://github.com/vercel-labs/agent-browser",
-  "desc": "Browser automation CLI for AI agents",
-  "stars": "46,688",
-  "language": "Rust",
-  "today_stars": "180 stars today",
-  "date": "2026-11-07",
+  "name": "sherlock-project/sherlock",
+  "url": "https://github.com/sherlock-project/sherlock",
+  "desc": "Hunt down social media accounts by username across social networks",
+  "stars": "103,024",
+  "language": "Python",
+  "today_stars": "2,372 stars today",
+  "date": "2026-11-08",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
