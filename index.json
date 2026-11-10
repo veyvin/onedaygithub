@@ -1,11 +1,11 @@
 {
-  "name": "meta/astryx",
-  "url": "https://github.com/meta/astryx",
-  "desc": "An open source design system that's fully customizable and agent ready",
-  "stars": "19,947",
-  "language": "TypeScript",
-  "today_stars": "3,324 stars today",
-  "date": "2026-11-09",
+  "name": "anthropics/claude-quickstarts",
+  "url": "https://github.com/anthropics/claude-quickstarts",
+  "desc": "A collection of projects designed to help developers quickly get started with building deployable applications using the Claude API",
+  "stars": "20,441",
+  "language": "Python",
+  "today_stars": "530 stars today",
+  "date": "2026-11-10",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
