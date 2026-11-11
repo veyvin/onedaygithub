@@ -1,11 +1,11 @@
 {
-  "name": "anthropics/claude-quickstarts",
-  "url": "https://github.com/anthropics/claude-quickstarts",
-  "desc": "A collection of projects designed to help developers quickly get started with building deployable applications using the Claude API",
-  "stars": "20,441",
-  "language": "Python",
-  "today_stars": "530 stars today",
-  "date": "2026-11-10",
+  "name": "GoogleChrome/modern-web-guidance-src",
+  "url": "https://github.com/GoogleChrome/modern-web-guidance-src",
+  "desc": "No description",
+  "stars": "1,688",
+  "language": "TypeScript",
+  "today_stars": "133 stars today",
+  "date": "2026-11-11",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
