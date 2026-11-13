@@ -1,11 +1,11 @@
 {
-  "name": "openai/codex-security",
-  "url": "https://github.com/openai/codex-security",
-  "desc": "OpenAI's Codex Security CLI and TypeScript SDK for finding, validating, and fixing security vulnerabilities. npm:https://www.npmjs.com/package/@openai/codex-security",
-  "stars": "12,343",
-  "language": "TypeScript",
-  "today_stars": "663 stars today",
-  "date": "2026-11-12",
+  "name": "we-promise/sure",
+  "url": "https://github.com/we-promise/sure",
+  "desc": "The personal finance app for everyone (by everyone)",
+  "stars": "14,665",
+  "language": "Ruby",
+  "today_stars": "944 stars today",
+  "date": "2026-11-13",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
