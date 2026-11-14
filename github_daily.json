@@ -1,11 +1,11 @@
 {
-  "name": "we-promise/sure",
-  "url": "https://github.com/we-promise/sure",
-  "desc": "The personal finance app for everyone (by everyone)",
-  "stars": "14,665",
-  "language": "Ruby",
-  "today_stars": "944 stars today",
-  "date": "2026-11-13",
+  "name": "backnotprop/plannotator",
+  "url": "https://github.com/backnotprop/plannotator",
+  "desc": "The workspace to stay in the loop and on top of agents - shape, decide, plan, annotate, review code, share with team, and send all feedback to agents with one click.",
+  "stars": "10,987",
+  "language": "TypeScript",
+  "today_stars": "412 stars today",
+  "date": "2026-11-14",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
