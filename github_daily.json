@@ -1,11 +1,11 @@
 {
-  "name": "dream-num/univer",
-  "url": "https://github.com/dream-num/univer",
-  "desc": "Build your own AI office with Univer Office SDK. Bring editing, calculation, collaboration, and file processing into your product for people and AI agents. Built on an extensible open-source core.",
-  "stars": "25,508",
+  "name": "ag-ui-protocol/ag-ui",
+  "url": "https://github.com/ag-ui-protocol/ag-ui",
+  "desc": "AG-UI: the Agent-User Interaction Protocol. Bring Agents into Frontend Applications.",
+  "stars": "18,935",
   "language": "TypeScript",
-  "today_stars": "1,041 stars today",
-  "date": "2026-11-15",
+  "today_stars": "790 stars today",
+  "date": "2026-11-16",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
