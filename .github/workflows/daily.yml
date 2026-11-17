@@ -8,7 +8,7 @@ on:
       provider:
         description: '选择模型提供商'
         required: true
-        default: 'deepseek'
+        default: 'sub2api'
         type: choice
         options:
           - deepseek
@@ -17,7 +17,7 @@ on:
           - sub2api
           - commandcode
       model:
-        description: '模型名称（可选，留空使用各提供商默认模型，sub2api 建议填写）'
+        description: '模型名称（可选，留空使用各提供商默认模型；sub2api 默认 deepseek-v4.1-flash）'
         required: false
         default: ''
         type: string
@@ -49,7 +49,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          if [ "${{ github.event.inputs.provider || 'deepseek' }}" = "cursor" ]; then
+          if [ "${{ github.event.inputs.provider || 'sub2api' }}" = "cursor" ]; then
             echo "安装 cursor-sdk..."
             pip install cursor-sdk
           fi
@@ -63,7 +63,7 @@ jobs:
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
           HALO_TOKEN: ${{ secrets.HALO_TOKEN }}
-          MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
+          MODEL_PROVIDER: ${{ github.event.inputs.provider || 'sub2api' }}
         run: |
           echo "=== 验证必需的 Secrets ==="
           echo "模型提供商: $MODEL_PROVIDER"
@@ -157,10 +157,10 @@ jobs:
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
-          MODEL_PROVIDER: ${{ github.event.inputs.provider || 'deepseek' }}
+          MODEL_PROVIDER: ${{ github.event.inputs.provider || 'sub2api' }}
           MODEL_NAME: ${{ github.event.inputs.model || '' }}
         run: |
-          echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-deepseek}) ==="
+          echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-sub2api}) ==="
           python generate_post.py
           if [ -f generated_post.json ]; then
             echo "文章生成成功"

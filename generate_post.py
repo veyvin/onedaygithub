@@ -200,7 +200,7 @@ PROVIDERS = {
         "api_url_env": "SUB2API_API_URL",
         "api_url_default": "http://localhost:18080/v1/chat/completions",
         "api_key_env": "SUB2API_API_KEY",
-        "model": "gpt-5.4",
+        "model": "deepseek-v4.1-flash",
         "auth_header": "Authorization",
         "auth_prefix": "Bearer ",
     },
@@ -410,9 +410,9 @@ def generate_post_with_cursor_sdk(repo_data, provider):
 
 
 def generate_post_with_deepseek(repo_data):
-    """使用大模型 API 生成博客文章（支持 DeepSeek、OpenCode Zen、Cursor SDK、Sub2API）"""
+    """使用大模型 API 生成博客文章（默认 Sub2API，另支持 DeepSeek、OpenCode Zen、Cursor SDK）"""
 
-    provider_name = os.getenv('MODEL_PROVIDER', 'deepseek')
+    provider_name = os.getenv('MODEL_PROVIDER', 'sub2api')
     provider = PROVIDERS.get(provider_name)
     if not provider:
         print(f"错误: 未知的 MODEL_PROVIDER '{provider_name}'，可选: {list(PROVIDERS.keys())}")
