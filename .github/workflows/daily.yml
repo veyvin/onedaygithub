@@ -158,7 +158,8 @@ jobs:
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'sub2api' }}
-          MODEL_NAME: ${{ github.event.inputs.model || '' }}
+          # 手动 Run workflow 的模型名优先；否则读仓库 Variables / Secrets 里的 MODEL_NAME
+          MODEL_NAME: ${{ github.event.inputs.model || vars.MODEL_NAME || secrets.MODEL_NAME || '' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-sub2api}) ==="
           python generate_post.py

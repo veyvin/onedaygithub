@@ -56,7 +56,13 @@ onedaygithub/
 | `HALO_TOKEN` | Halo Console 的 Personal Access Token（需具备 `posts:manage` 权限） |
 | `GITHUB_TOKEN` | GitHub Actions 自带，无需手动配置（用于回写 CSV 与推送 gh-pages） |
 
-> 💡 默认模型为 `deepseek-v4.1-flash`；如需覆盖，设置环境变量 `MODEL_NAME`（模型名）或 `MODEL_PROVIDER`（提供商）。
+在 **Settings → Secrets and variables → Actions → Variables**（推荐）或 Secrets 中还可配置：
+
+| 名称 | 说明 |
+| --- | --- |
+| `MODEL_NAME` | 覆盖默认模型名。不填则用提供商默认（Sub2API 为 `deepseek-v4.1-flash`）。定时任务会读这项；手动 Run workflow 时输入框优先。 |
+
+> 💡 默认模型为 `deepseek-v4.1-flash`；如需覆盖，设置仓库变量/Secret `MODEL_NAME`，或手动运行工作流时填写「模型名称」。提供商用 `MODEL_PROVIDER`。
 > 💡 使用其他提供商时再补充对应 Key：`DEEPSEEK_API_KEY` / `OPENCODE_ZEN_API_KEY` / `CURSOR_API_KEY` / `COMMANDCODE_API_KEY`。
 
 > 💡 默认的 Halo 站点地址为 `https://veyvin.com`，可通过环境变量 `HALO_URL` 覆盖（无需改代码）。
@@ -208,7 +214,7 @@ A: 这是 Cloudflare 人机校验拦截，不是 Halo 的问题，也和 slug/to
 `/apis/*` 建一条 `Allow` 规则。
 
 **Q: 想换大模型怎么办？**
-A: 优先用环境变量：`MODEL_PROVIDER` 选择提供商（`sub2api`/`deepseek`/`opencode-zen`/`cursor`/`commandcode`），`MODEL_NAME` 覆盖模型名（默认 `deepseek-v4.1-flash`）。也可以直接修改 `generate_post.py` 里的 `PROVIDERS` 配置。
+A: 在仓库 **Settings → Secrets and variables → Actions → Variables** 新增 `MODEL_NAME`（模型名不是敏感信息，建议用 Variable 而不是 Secret）。定时任务会读取它。手动 Run workflow 时，「模型名称」输入框会覆盖这项。提供商用 `MODEL_PROVIDER`（`sub2api`/`deepseek`/`opencode-zen`/`cursor`/`commandcode`）。也可以直接修改 `generate_post.py` 里的 `PROVIDERS` 配置。
 
 **Q: 如何修改发布频率？**
 A: 编辑 `.github/workflows/daily.yml` 的 `cron` 字段即可。注意 GitHub Actions 定时为 UTC 时区。
