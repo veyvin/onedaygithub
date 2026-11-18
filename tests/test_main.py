@@ -12,7 +12,9 @@ from bs4 import BeautifulSoup
 
 import github_daily
 from generate_post import (
+    WRITING_SYSTEM_PROMPT,
     _build_prompt,
+    _build_user_prompt,
     extract_title_and_content,
     format_code_blocks,
     strip_emoji,
@@ -649,3 +651,18 @@ def test_build_prompt_without_source_metadata_is_backward_compatible():
     })
     assert "榜单来源" not in prompt
     assert "a/b" in prompt
+
+
+def test_system_prompt_is_stable_and_excludes_repo_fields():
+    """system 前缀必须每天字节级相同，项目字段只能出现在 user 消息里。"""
+    user = _build_user_prompt({
+        "name": "foo/bar", "url": "https://github.com/foo/bar",
+        "desc": "unique-desc-xyz", "date": "2026-11-18",
+    })
+    assert "foo/bar" not in WRITING_SYSTEM_PROMPT
+    assert "unique-desc-xyz" not in WRITING_SYSTEM_PROMPT
+    assert "foo/bar" in user
+    assert WRITING_SYSTEM_PROMPT in _build_prompt({
+        "name": "foo/bar", "url": "https://github.com/foo/bar",
+        "desc": "unique-desc-xyz", "date": "2026-11-18",
+    })

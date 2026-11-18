@@ -220,76 +220,11 @@ def _resolve_model(provider):
     return override or provider.get('model')
 
 
-def _build_prompt(repo_data):
-    """构建博客文章的提示词，供所有提供商共用。"""
-    name = repo_data.get('name')
-    url = repo_data.get('url')
-    raw_desc = repo_data.get('desc')
-    desc = raw_desc.strip() if isinstance(raw_desc, str) and raw_desc.strip() else ''
-    if desc.lower() in ('no description', 'no description provided', 'none'):
-        desc = ''
-    desc_display = desc if desc else '（项目未提供描述）'
-    date = repo_data.get('date')
-
-    seed = int(hashlib.md5(name.encode()).hexdigest()[:8], 16) % 6
-
-    # 榜单来源：全球日榜抓完后会自动降级到中文区/周榜等来源，
-    # 在提示词里注明，文章才不会把周榜项目写成「今日新增」。
-    source_label = repo_data.get('source_label')
-    period = repo_data.get('period')
-    if source_label:
-        period_text = {'daily': '日榜（当日新增）', 'weekly': '周榜（当周累计）'}.get(period, period or '')
-        source_line = f"- 榜单来源：{source_label}" + (f"（{period_text}）" if period_text else "") + "\n"
-    else:
-        source_line = ""
-
-    structure_templates = [
-        {
-            "intro": "从一个实际开发场景或痛点开始，然后引出这个项目如何解决这个问题",
-            "structure": ["引人入胜的开头（故事/问题场景）", "项目登场：如何解决这个问题", "核心功能深度解析", "技术亮点和创新点", "实战体验和使用建议", "总结：为什么值得关注"]
-        },
-        {
-            "intro": "对比这个项目与同类工具/框架的差异，突出其独特价值",
-            "structure": ["项目背景：为什么需要它", "与同类方案的对比分析", "核心优势解析", "技术实现亮点", "适用场景和局限性", "总结：什么时候选择它"]
-        },
-        {
-            "intro": "聚焦技术实现细节，适合技术导向的项目",
-            "structure": ["项目概述和技术背景", "架构设计解析", "关键技术实现细节", "性能优化和设计亮点", "开发者视角的使用体验", "技术栈总结和启发"]
-        },
-        {
-            "intro": "从实际应用场景出发，展示项目的实用价值",
-            "structure": ["实际应用场景介绍", "项目如何解决这些场景需求", "功能特性详解", "快速上手指南", "进阶使用技巧", "场景总结和扩展思考"]
-        },
-        {
-            "intro": "以探索和发现的视角，逐步深入项目的各个方面",
-            "structure": ["发现这个项目：第一印象", "深入探索：核心功能", "技术揭秘：实现原理", "实际测试：使用体验", "发现亮点：独特之处", "探索总结：值得学习的点"]
-        },
-        {
-            "intro": "从开发者常见的痛点出发，展示项目的解决方案",
-            "structure": ["开发者痛点分析", "项目如何解决这些问题", "解决方案详解", "最佳实践和使用建议", "潜在问题和注意事项", "总结：解决问题的价值"]
-        }
-    ]
-
-    selected_structure = structure_templates[seed]
-
-    prompt = f"""
-请为今天的热门开源项目写一篇技术博客文章。
-
-项目信息（仅基于以下真实信息写作，不要编造未提供的技术细节、数据或对比）：
-- 项目名称：{name}
-- 项目地址：{url}
-- 项目描述：{desc_display}
-- 推荐日期：{date}
-{source_line}
+# 固定写作规则单独放 system：每天项目信息不同，若写在 prompt 开头会导致前缀缓存永远 miss。
+WRITING_SYSTEM_PROMPT = """你是技术博客作者。请为用户给出的开源项目写一篇技术博客文章。仅基于用户消息中的真实信息写作，不要编造未提供的技术细节、数据或对比。
 
 🎯 写作策略（重要！）：
 根据项目特点，选择最适合的文章结构。不要使用固定模板，要让每篇文章都有独特的风格和视角。
-
-📝 文章结构建议（根据项目特点灵活选择3-6个部分）：
-{selected_structure['intro']}
-
-建议包含以下部分（但不要全部都用，根据项目特点选择3-5个即可）：
-{chr(10).join(['- ' + s for s in selected_structure['structure']])}
 
 ⚠️ 注意：不要固定使用相同的结构！根据项目类型：
 - 如果是框架/库：侧重技术实现和使用方法
@@ -351,7 +286,107 @@ class Example:
 文章标题（第一行，不要HTML标签）
 <html内容>（从第二行开始）
 """
-    return prompt
+
+
+def _build_user_prompt(repo_data):
+    """每天会变的项目信息 + 本次结构建议，放在 user 消息末尾，不影响 system 前缀缓存。"""
+    name = repo_data.get('name')
+    url = repo_data.get('url')
+    raw_desc = repo_data.get('desc')
+    desc = raw_desc.strip() if isinstance(raw_desc, str) and raw_desc.strip() else ''
+    if desc.lower() in ('no description', 'no description provided', 'none'):
+        desc = ''
+    desc_display = desc if desc else '（项目未提供描述）'
+    date = repo_data.get('date')
+
+    seed = int(hashlib.md5((name or '').encode()).hexdigest()[:8], 16) % 6
+
+    # 榜单来源：全球日榜抓完后会自动降级到中文区/周榜等来源，
+    # 在提示词里注明，文章才不会把周榜项目写成「今日新增」。
+    source_label = repo_data.get('source_label')
+    period = repo_data.get('period')
+    if source_label:
+        period_text = {'daily': '日榜（当日新增）', 'weekly': '周榜（当周累计）'}.get(period, period or '')
+        source_line = f"- 榜单来源：{source_label}" + (f"（{period_text}）" if period_text else "") + "\n"
+    else:
+        source_line = ""
+
+    structure_templates = [
+        {
+            "intro": "从一个实际开发场景或痛点开始，然后引出这个项目如何解决这个问题",
+            "structure": ["引人入胜的开头（故事/问题场景）", "项目登场：如何解决这个问题", "核心功能深度解析", "技术亮点和创新点", "实战体验和使用建议", "总结：为什么值得关注"]
+        },
+        {
+            "intro": "对比这个项目与同类工具/框架的差异，突出其独特价值",
+            "structure": ["项目背景：为什么需要它", "与同类方案的对比分析", "核心优势解析", "技术实现亮点", "适用场景和局限性", "总结：什么时候选择它"]
+        },
+        {
+            "intro": "聚焦技术实现细节，适合技术导向的项目",
+            "structure": ["项目概述和技术背景", "架构设计解析", "关键技术实现细节", "性能优化和设计亮点", "开发者视角的使用体验", "技术栈总结和启发"]
+        },
+        {
+            "intro": "从实际应用场景出发，展示项目的实用价值",
+            "structure": ["实际应用场景介绍", "项目如何解决这些场景需求", "功能特性详解", "快速上手指南", "进阶使用技巧", "场景总结和扩展思考"]
+        },
+        {
+            "intro": "以探索和发现的视角，逐步深入项目的各个方面",
+            "structure": ["发现这个项目：第一印象", "深入探索：核心功能", "技术揭秘：实现原理", "实际测试：使用体验", "发现亮点：独特之处", "探索总结：值得学习的点"]
+        },
+        {
+            "intro": "从开发者常见的痛点出发，展示项目的解决方案",
+            "structure": ["开发者痛点分析", "项目如何解决这些问题", "解决方案详解", "最佳实践和使用建议", "潜在问题和注意事项", "总结：解决问题的价值"]
+        }
+    ]
+
+    selected_structure = structure_templates[seed]
+
+    return f"""请为今天的热门开源项目写一篇技术博客文章。
+
+项目信息（仅基于以下真实信息写作，不要编造未提供的技术细节、数据或对比）：
+- 项目名称：{name}
+- 项目地址：{url}
+- 项目描述：{desc_display}
+- 推荐日期：{date}
+{source_line}
+📝 本次文章结构建议（根据项目特点灵活选择3-6个部分）：
+{selected_structure['intro']}
+
+建议包含以下部分（但不要全部都用，根据项目特点选择3-5个即可）：
+{chr(10).join(['- ' + s for s in selected_structure['structure']])}
+"""
+
+
+def _build_prompt(repo_data):
+    """兼容测试与 Cursor SDK：system + user 拼成单条文本。"""
+    return WRITING_SYSTEM_PROMPT + "\n\n" + _build_user_prompt(repo_data)
+
+
+def _log_completion_usage(result):
+    """打印 prompt 缓存命中情况（DeepSeek / OpenAI / Anthropic 字段都认）。"""
+    usage = result.get("usage") if isinstance(result, dict) else None
+    if not isinstance(usage, dict):
+        print("API usage: 响应未返回 usage")
+        return
+
+    prompt_tokens = usage.get("prompt_tokens")
+    completion_tokens = usage.get("completion_tokens")
+    details = usage.get("prompt_tokens_details") if isinstance(usage.get("prompt_tokens_details"), dict) else {}
+    cache_hit = (
+        usage.get("prompt_cache_hit_tokens")
+        or usage.get("cache_read_input_tokens")
+        or details.get("cached_tokens")
+        or 0
+    )
+    cache_miss = (
+        usage.get("prompt_cache_miss_tokens")
+        or usage.get("cache_creation_input_tokens")
+    )
+    print(
+        f"API usage: prompt={prompt_tokens} completion={completion_tokens} "
+        f"cache_hit={cache_hit} cache_miss={cache_miss if cache_miss is not None else 'n/a'}"
+    )
+    if not cache_hit:
+        print("提示: 本次未命中 prompt 缓存。同一 system 前缀在缓存有效期内再次请求才会命中。")
 
 
 def generate_post_with_cursor_sdk(repo_data, provider):
@@ -444,8 +479,8 @@ def generate_post_with_deepseek(repo_data):
 
     API_URL = os.getenv(provider.get('api_url_env', ''), provider.get('api_url_default', provider.get('api_url', '')))
 
-    prompt = _build_prompt(repo_data)
-    
+    user_prompt = _build_user_prompt(repo_data)
+
     headers = {
         "Content-Type": "application/json",
         provider['auth_header']: f"{provider['auth_prefix']}{api_key}"
@@ -455,22 +490,27 @@ def generate_post_with_deepseek(repo_data):
         "model": model,
         "messages": [
             {
+                "role": "system",
+                "content": WRITING_SYSTEM_PROMPT,
+            },
+            {
                 "role": "user",
-                "content": prompt
-            }
+                "content": user_prompt,
+            },
         ],
         "temperature": 0.7,
         "max_tokens": 32000,
-        "stream": False
+        "stream": False,
     }
-    
+
     try:
-        print(f"正在调用 {provider_name} API...")
+        print(f"正在调用 {provider_name} API（system 前缀可缓存）...")
         response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
         print(f"API 响应状态码: {response.status_code}")
         
         if response.status_code == 200:
             result = response.json()
+            _log_completion_usage(result)
             raw_content = result['choices'][0]['message']['content']
             
             # 提取标题和内容
