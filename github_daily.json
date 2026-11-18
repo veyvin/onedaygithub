@@ -1,11 +1,11 @@
 {
-  "name": "elementalsouls/Claude-BugHunter",
-  "url": "https://github.com/elementalsouls/Claude-BugHunter",
-  "desc": "A Claude Code skill bundle for bug hunting and external red-team work - 82 skills, 15 slash commands, 681 disclosed-report patterns curated across 24 core vulnerability classes, plus enterprise identity + infrastructure attack matrices.",
-  "stars": "9,166",
-  "language": "Python",
-  "today_stars": "1,007 stars today",
-  "date": "2026-11-17",
+  "name": "Tencent/LoopForge",
+  "url": "https://github.com/Tencent/LoopForge",
+  "desc": "Self-hosted workflows for coding-agent delivery. Orchestrate CodeBuddy, Codex and Claude Code with scripts and human approval gates. Includes Local workflows for coding assistants.",
+  "stars": "3,160",
+  "language": "Go",
+  "today_stars": "591 stars today",
+  "date": "2026-11-18",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
