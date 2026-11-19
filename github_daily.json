@@ -1,11 +1,11 @@
 {
-  "name": "NVIDIA/SkillEvaluator",
-  "url": "https://github.com/NVIDIA/SkillEvaluator",
-  "desc": "Multi-tier framework for evaluating AI agent skills and plugins with quality gates, semantic overlap detection, synthetic evaluation dataset generation, and live agent evaluation that measures how skills affect agent behavior.",
-  "stars": "3,688",
+  "name": "jingyaogong/minimind",
+  "url": "https://github.com/jingyaogong/minimind",
+  "desc": "🧠 两小时从 0 训出你的 64M 大模型。Train your own 64M LLM from scratch in 2 hours.",
+  "stars": "66,825",
   "language": "Python",
-  "today_stars": "323 stars today",
-  "date": "2026-11-18",
+  "today_stars": "301 stars today",
+  "date": "2026-11-19",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
