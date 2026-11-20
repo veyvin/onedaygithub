@@ -1,11 +1,11 @@
 {
-  "name": "jingyaogong/minimind",
-  "url": "https://github.com/jingyaogong/minimind",
-  "desc": "🧠 两小时从 0 训出你的 64M 大模型。Train your own 64M LLM from scratch in 2 hours.",
-  "stars": "66,825",
-  "language": "Python",
-  "today_stars": "301 stars today",
-  "date": "2026-11-19",
+  "name": "firecrawl/firecrawl",
+  "url": "https://github.com/firecrawl/firecrawl",
+  "desc": "Knowledge infrastructure to make your agents smarter. Search, scrape and access 550+ data providers through one API.",
+  "stars": "205,182",
+  "language": "TypeScript",
+  "today_stars": "1,226 stars today",
+  "date": "2026-11-20",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
