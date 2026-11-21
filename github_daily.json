@@ -1,11 +1,11 @@
 {
-  "name": "firecrawl/firecrawl",
-  "url": "https://github.com/firecrawl/firecrawl",
-  "desc": "Knowledge infrastructure to make your agents smarter. Search, scrape and access 550+ data providers through one API.",
-  "stars": "205,182",
-  "language": "TypeScript",
-  "today_stars": "1,226 stars today",
-  "date": "2026-11-20",
+  "name": "nginx/nginx",
+  "url": "https://github.com/nginx/nginx",
+  "desc": "The official NGINX Open Source repository.",
+  "stars": "32,711",
+  "language": "C",
+  "today_stars": "195 stars today",
+  "date": "2026-11-21",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
