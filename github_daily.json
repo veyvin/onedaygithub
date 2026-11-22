@@ -1,11 +1,11 @@
 {
-  "name": "nginx/nginx",
-  "url": "https://github.com/nginx/nginx",
-  "desc": "The official NGINX Open Source repository.",
-  "stars": "32,711",
-  "language": "C",
-  "today_stars": "195 stars today",
-  "date": "2026-11-21",
+  "name": "openvinotoolkit/openvino",
+  "url": "https://github.com/openvinotoolkit/openvino",
+  "desc": "OpenVINO™ is an open source toolkit for optimizing and deploying AI inference",
+  "stars": "12,076",
+  "language": "C++",
+  "today_stars": "155 stars today",
+  "date": "2026-11-22",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
