@@ -169,6 +169,12 @@ jobs:
           # 默认提供商的专属模型名：只对 sub2api 生效，避免切换提供商时串用模型。
           # 只用仓库 Variables：模型名不是敏感信息，放 Secrets 会让日志里的模型名变成 ***。
           DEFAULT_MODEL_NAME: ${{ vars.MODEL_NAME || '' }}
+          # 生成参数（均可用仓库 Variables 覆盖）
+          LLM_TIMEOUT: ${{ vars.LLM_TIMEOUT || '240' }}
+          LLM_MAX_TOKENS: ${{ vars.LLM_MAX_TOKENS || '20000' }}
+          ARTICLE_MIN_CHARS: ${{ vars.ARTICLE_MIN_CHARS || '2500' }}
+          ARTICLE_MAX_CHARS: ${{ vars.ARTICLE_MAX_CHARS || '5000' }}
+          README_MAX_CHARS: ${{ vars.README_MAX_CHARS || '6000' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-sub2api}) ==="
           python generate_post.py

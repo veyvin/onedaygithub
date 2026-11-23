@@ -203,9 +203,15 @@ def extract_title_and_content(full_content):
 # 默认模型提供商。DEFAULT_MODEL_NAME 只对这个提供商生效，避免切换提供商时串用模型。
 DEFAULT_PROVIDER = "sub2api"
 
-# 单次 LLM 请求超时（秒）。非流式请求要等整篇文章生成完，
-# 实测约 45 秒，60 秒余量太小，容易被读超时打断。
-LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "180"))
+# 单次 LLM 请求超时（秒）。目标 2500-5000 字，生成时间比短文更长，留足余量。
+LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "240"))
+
+# 单次输出 token 上限：2500-5000 字中文 + HTML 标记约 7k-10k tokens，留足余量。
+MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "20000"))
+
+# 正文纯文字长度要求（不含 HTML 标签与代码块）
+MIN_ARTICLE_CHARS = int(os.getenv("ARTICLE_MIN_CHARS", "2500"))
+MAX_ARTICLE_CHARS = int(os.getenv("ARTICLE_MAX_CHARS", "5000"))
 
 # 模型提供商配置
 PROVIDERS = {
@@ -281,7 +287,7 @@ WRITING_SYSTEM_PROMPT = """你是技术博客作者。请为用户给出的开�
 ✨ 写作要求：
 1. 文章标题请直接写在第一行，不要包含任何 HTML 标签。标题要吸引人，包含项目名称和1-2个相关的有趣图标（如 🤖 🚀 🛠️ ⚡ 🎨 🔥 💡 📦 🌟 等）来标识这是自动生成的文章
 2. 正文内容从第二行开始，使用 HTML 格式
-3. 文章长度1000-2000字，要有实质内容，不要空泛
+3. 正文纯文字 2500-5000 字（不含 HTML 标签与代码块），分 5-8 个小节，每节 500-800 字，要有实质内容，不要空泛
 4. 正文中使用适当的 HTML 标签：<p>, <h2>, <h3>, <ul>, <li>, <code>, <strong>, <em>, <blockquote> 等
 5. 所有标题标签必须包含 id 属性，例如：<h2 id="project-introduction">项目介绍</h2>
 6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）
@@ -392,27 +398,27 @@ def _build_user_prompt(repo_data, repo_context=None):
     structure_templates = [
         {
             "intro": "从一个实际开发场景或痛点开始，然后引出这个项目如何解决这个问题",
-            "structure": ["引人入胜的开头（故事/问题场景）", "项目登场：如何解决这个问题", "核心功能深度解析", "技术亮点和创新点", "实战体验和使用建议", "总结：为什么值得关注"]
+            "structure": ["引人入胜的开头（故事/问题场景）", "项目登场：如何解决这个问题", "核心功能深度解析", "技术亮点和创新点", "实战体验和使用建议", "上手前的准备与安装步骤", "适用边界与替代方案", "总结：为什么值得关注"]
         },
         {
             "intro": "对比这个项目与同类工具/框架的差异，突出其独特价值",
-            "structure": ["项目背景：为什么需要它", "与同类方案的对比分析", "核心优势解析", "技术实现亮点", "适用场景和局限性", "总结：什么时候选择它"]
+            "structure": ["项目背景：为什么需要它", "与同类方案的对比分析", "核心优势解析", "技术实现亮点", "迁移成本与上手难度", "适用场景和局限性", "团队选型 checklist", "总结：什么时候选择它"]
         },
         {
             "intro": "聚焦技术实现细节，适合技术导向的项目",
-            "structure": ["项目概述和技术背景", "架构设计解析", "关键技术实现细节", "性能优化和设计亮点", "开发者视角的使用体验", "技术栈总结和启发"]
+            "structure": ["项目概述和技术背景", "架构设计解析", "关键模块拆解", "关键技术实现细节", "性能优化和设计亮点", "踩坑记录与调试技巧", "开发者视角的使用体验", "技术栈总结和启发"]
         },
         {
             "intro": "从实际应用场景出发，展示项目的实用价值",
-            "structure": ["实际应用场景介绍", "项目如何解决这些场景需求", "功能特性详解", "快速上手指南", "进阶使用技巧", "场景总结和扩展思考"]
+            "structure": ["实际应用场景介绍", "项目如何解决这些场景需求", "功能特性详解", "快速上手指南", "进阶使用技巧", "真实案例拆解", "扩展与生态集成", "场景总结和扩展思考"]
         },
         {
             "intro": "以探索和发现的视角，逐步深入项目的各个方面",
-            "structure": ["发现这个项目：第一印象", "深入探索：核心功能", "技术揭秘：实现原理", "实际测试：使用体验", "发现亮点：独特之处", "探索总结：值得学习的点"]
+            "structure": ["发现这个项目：第一印象", "深入探索：核心功能", "技术揭秘：实现原理", "上手实测记录", "实际测试：使用体验", "社区与生态观察", "发现亮点：独特之处", "探索总结：值得学习的点"]
         },
         {
             "intro": "从开发者常见的痛点出发，展示项目的解决方案",
-            "structure": ["开发者痛点分析", "项目如何解决这些问题", "解决方案详解", "最佳实践和使用建议", "潜在问题和注意事项", "总结：解决问题的价值"]
+            "structure": ["开发者痛点分析", "项目如何解决这些问题", "解决方案详解", "最佳实践和使用建议", "落地路线图", "潜在问题和注意事项", "常见问题排查", "总结：解决问题的价值"]
         }
     ]
 
@@ -427,10 +433,10 @@ def _build_user_prompt(repo_data, repo_context=None):
 - 推荐日期：{date}
 {source_line}{facts_block}
 {readme_block}
-📝 本次文章结构建议（根据项目特点灵活选择3-6个部分）：
+📝 本次文章结构建议（根据项目特点灵活选择 5-8 个部分，每节 500-800 字）：
 {selected_structure['intro']}
 
-建议包含以下部分（但不要全部都用，根据项目特点选择3-5个即可）：
+建议包含以下部分（但不要全部都用，根据项目特点选择 5-8 个即可）：
 {chr(10).join(['- ' + s for s in selected_structure['structure']])}
 """
 
@@ -511,6 +517,20 @@ def _parse_structured_post(raw):
     return {"title": title, "summary": summary, "tags": tags[:5], "content": content}
 
 
+def _plain_text_length(content):
+    """统计正文纯文字长度：去掉 HTML 标签、代码块与空白。"""
+    if not content:
+        return 0
+    if BeautifulSoup is not None:
+        soup = BeautifulSoup(content, "html.parser")
+        for tag in soup.find_all(["pre", "code", "script", "style"]):
+            tag.decompose()
+        text = soup.get_text("")
+    else:
+        text = re.sub(r"<[^>]+>", "", content)
+    return len(re.sub(r"\s+", "", text))
+
+
 def _validate_post(post):
     """校验生成结果，返回问题列表（空列表表示通过）。"""
     problems = []
@@ -521,8 +541,12 @@ def _validate_post(post):
         problems.append("标题过短")
     if len(title) > 80:
         problems.append("标题过长（超过 80 字）")
-    if len(content) < 500:
-        problems.append("正文过短（少于 500 字符）")
+
+    plain_len = _plain_text_length(content)
+    if plain_len < MIN_ARTICLE_CHARS:
+        problems.append(f"正文纯文字不足 {MIN_ARTICLE_CHARS} 字（当前 {plain_len} 字）")
+    if plain_len > MAX_ARTICLE_CHARS:
+        problems.append(f"正文纯文字超过 {MAX_ARTICLE_CHARS} 字（当前 {plain_len} 字）")
 
     lowered = content.lower()
     if any(tag in lowered for tag in ("<!doctype", "<html", "<body")):
@@ -541,7 +565,7 @@ def _call_chat_completion(provider_name, api_url, headers, model, messages):
         "model": model,
         "messages": messages,
         "temperature": 0.7,
-        "max_tokens": 32000,
+        "max_tokens": MAX_OUTPUT_TOKENS,
         "stream": False,
     }
 

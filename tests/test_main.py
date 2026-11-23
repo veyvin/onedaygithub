@@ -822,7 +822,7 @@ def test_parse_structured_post_rejects_invalid_payload():
 def test_validate_post_flags_common_problems():
     problems = generate_post._validate_post({"title": "短", "content": "<p>hi</p>"})
     assert any("标题过短" in p for p in problems)
-    assert any("正文过短" in p for p in problems)
+    assert any("正文纯文字不足" in p for p in problems)
 
     problems = generate_post._validate_post({
         "title": "一个足够长的标题标题",
@@ -833,8 +833,25 @@ def test_validate_post_flags_common_problems():
 
 
 def test_validate_post_accepts_good_post():
-    post = {"title": "一个足够长的标题标题", "content": "<p>" + "内容" * 300 + "</p>"}
+    post = {"title": "一个足够长的标题标题", "content": "<p>" + "内容" * 1300 + "</p>"}
     assert generate_post._validate_post(post) == []
+
+
+def test_validate_post_flags_too_long_post():
+    post = {"title": "一个足够长的标题标题", "content": "<p>" + "内容" * 2600 + "</p>"}
+    problems = generate_post._validate_post(post)
+    assert any("超过 5000 字" in p for p in problems)
+
+
+def test_plain_text_length_excludes_tags_and_code_blocks():
+    content = (
+        "<h2 id=\"a\">小节标题</h2>"
+        "<p>" + "正文" * 10 + "</p>"
+        "<pre><code class=\"language-python\">" + "print(1)" * 50 + "</code></pre>"
+        "<p>行内 <code>not counted</code> 代码</p>"
+    )
+    # 只统计标题与两段正文：4 + 20 + 4 = 28 个非空白字符
+    assert generate_post._plain_text_length(content) == 28
 
 
 def test_generate_post_retries_once_on_validation_failure(monkeypatch):
@@ -850,7 +867,7 @@ def test_generate_post_retries_once_on_validation_failure(monkeypatch):
             "title": "一个足够长的标题标题",
             "summary": "摘要内容",
             "tags": ["AI"],
-            "content": "<p>" + "内容" * 300 + "</p>",
+            "content": "<p>" + "内容" * 1300 + "</p>",
         }), {"usage": {}}
 
     monkeypatch.setattr(generate_post, "_call_chat_completion", fake_call)
