@@ -4,6 +4,7 @@ import os
 import hashlib
 import html
 import re
+import time
 import traceback
 from datetime import datetime
 
@@ -212,6 +213,11 @@ MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "20000"))
 # 正文纯文字长度要求（不含 HTML 标签与代码块）
 MIN_ARTICLE_CHARS = int(os.getenv("ARTICLE_MIN_CHARS", "2500"))
 MAX_ARTICLE_CHARS = int(os.getenv("ARTICLE_MAX_CHARS", "5000"))
+
+# 大模型请求遇到这些状态时重试（网关抖动、限流等）
+LLM_RETRYABLE_STATUS = {408, 409, 425, 429, 500, 502, 503, 504, 520, 522, 524, 530}
+LLM_MAX_ATTEMPTS = int(os.getenv("LLM_MAX_ATTEMPTS", "3"))
+LLM_RETRY_DELAY = int(os.getenv("LLM_RETRY_DELAY", "15"))
 
 # 模型提供商配置
 PROVIDERS = {
@@ -560,7 +566,10 @@ def _validate_post(post):
 
 
 def _call_chat_completion(provider_name, api_url, headers, model, messages):
-    """调用 Chat Completions，返回 (原始文本, 响应 JSON)；失败返回 (None, None)。"""
+    """调用 Chat Completions，返回 (原始文本, 响应 JSON)；失败返回 (None, None)。
+
+    429/5xx 等瞬时错误会按 LLM_MAX_ATTEMPTS 重试，退避间隔 LLM_RETRY_DELAY × 次数。
+    """
     payload = {
         "model": model,
         "messages": messages,
@@ -569,30 +578,45 @@ def _call_chat_completion(provider_name, api_url, headers, model, messages):
         "stream": False,
     }
 
-    try:
-        print(f"正在调用 {provider_name} API（system 前缀可缓存）...")
-        response = requests.post(api_url, headers=headers, json=payload, timeout=LLM_TIMEOUT)
-        print(f"API 响应状态码: {response.status_code}")
-
-        if response.status_code != 200:
-            print(f"API 错误: {response.status_code}")
-            print(f"错误详情: {response.text[:500]}")
-            return None, None
-
+    for attempt in range(1, LLM_MAX_ATTEMPTS + 1):
         try:
-            result = response.json()
-            raw_content = result['choices'][0]['message']['content']
-        except (ValueError, KeyError, IndexError, TypeError) as exc:
-            # 代理偶尔会返回 200 + 错误 JSON，这里给出可读报错而不是直接 traceback
-            print(f"API 响应解析失败: {exc}")
-            print(f"响应预览: {response.text[:500]}")
+            print(f"正在调用 {provider_name} API（第 {attempt}/{LLM_MAX_ATTEMPTS} 次）...")
+            response = requests.post(api_url, headers=headers, json=payload, timeout=LLM_TIMEOUT)
+            print(f"API 响应状态码: {response.status_code}")
+
+            if response.status_code in LLM_RETRYABLE_STATUS and attempt < LLM_MAX_ATTEMPTS:
+                wait = LLM_RETRY_DELAY * attempt
+                detail = re.sub(r"\s+", " ", response.text or "")[:200]
+                print(f"API 暂时不可用（{response.status_code}），{wait} 秒后重试: {detail}")
+                time.sleep(wait)
+                continue
+
+            if response.status_code != 200:
+                print(f"API 错误: {response.status_code}")
+                print(f"错误详情: {response.text[:500]}")
+                return None, None
+
+            try:
+                result = response.json()
+                raw_content = result['choices'][0]['message']['content']
+            except (ValueError, KeyError, IndexError, TypeError) as exc:
+                # 代理偶尔会返回 200 + 错误 JSON，这里给出可读报错而不是直接 traceback
+                print(f"API 响应解析失败: {exc}")
+                print(f"响应预览: {response.text[:500]}")
+                return None, None
+
+            return raw_content, result
+
+        except requests.exceptions.RequestException as exc:
+            if attempt < LLM_MAX_ATTEMPTS:
+                wait = LLM_RETRY_DELAY * attempt
+                print(f"网络请求错误（第 {attempt} 次）：{exc}，{wait} 秒后重试")
+                time.sleep(wait)
+                continue
+            print(f"网络请求错误: {exc}")
             return None, None
 
-        return raw_content, result
-
-    except requests.exceptions.RequestException as exc:
-        print(f"网络请求错误: {exc}")
-        return None, None
+    return None, None
 
 
 def generate_post_with_cursor_sdk(repo_data, provider, repo_context=None):

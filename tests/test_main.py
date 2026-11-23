@@ -854,6 +854,26 @@ def test_plain_text_length_excludes_tags_and_code_blocks():
     assert generate_post._plain_text_length(content) == 28
 
 
+def test_call_chat_completion_retries_transient_502(monkeypatch):
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            return _fake_response(502, {}, "<html><title>502 Bad gateway</title></html>")
+        return _fake_response(
+            200, {}, "{}",
+            json_body={"choices": [{"message": {"content": "hello"}}]},
+        )
+
+    monkeypatch.setattr(generate_post.requests, "post", fake_post)
+    monkeypatch.setattr(generate_post.time, "sleep", lambda seconds: None)
+
+    raw, result = generate_post._call_chat_completion("sub2api", "url", {}, "model", [])
+    assert len(calls) == 2
+    assert raw == "hello"
+
+
 def test_generate_post_retries_once_on_validation_failure(monkeypatch):
     monkeypatch.setenv("MODEL_PROVIDER", "sub2api")
     monkeypatch.setenv("SUB2API_API_KEY", "key")

@@ -172,6 +172,8 @@ jobs:
           # 生成参数（均可用仓库 Variables 覆盖）
           LLM_TIMEOUT: ${{ vars.LLM_TIMEOUT || '240' }}
           LLM_MAX_TOKENS: ${{ vars.LLM_MAX_TOKENS || '20000' }}
+          LLM_MAX_ATTEMPTS: ${{ vars.LLM_MAX_ATTEMPTS || '3' }}
+          LLM_RETRY_DELAY: ${{ vars.LLM_RETRY_DELAY || '15' }}
           ARTICLE_MIN_CHARS: ${{ vars.ARTICLE_MIN_CHARS || '2500' }}
           ARTICLE_MAX_CHARS: ${{ vars.ARTICLE_MAX_CHARS || '5000' }}
           README_MAX_CHARS: ${{ vars.README_MAX_CHARS || '6000' }}

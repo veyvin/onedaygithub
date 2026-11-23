@@ -63,6 +63,7 @@ onedaygithub/
 | `MODEL_NAME` | 默认提供的模型名（仓库变量，推荐）。只作用于默认提供商 `sub2api`，默认 `deepseek-v4.1-flash`；切换到其他提供商时不会串用。 |
 | `LLM_TIMEOUT` | 单次大模型请求超时秒数，默认 `240`。 |
 | `LLM_MAX_TOKENS` | 单次输出 token 上限，默认 `20000`。 |
+| `LLM_MAX_ATTEMPTS` / `LLM_RETRY_DELAY` | 429/5xx 重试次数与退避基数（秒），默认 `3` / `15`。 |
 | `ARTICLE_MIN_CHARS` / `ARTICLE_MAX_CHARS` | 正文纯文字长度区间（不含 HTML 与代码块），默认 `2500` / `5000`。 |
 | `README_MAX_CHARS` | 注入提示词的 README 最大字符数，默认 `6000`。 |
 
