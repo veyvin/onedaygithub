@@ -1,11 +1,11 @@
 {
-  "name": "openvinotoolkit/openvino",
-  "url": "https://github.com/openvinotoolkit/openvino",
-  "desc": "OpenVINO™ is an open source toolkit for optimizing and deploying AI inference",
-  "stars": "12,076",
-  "language": "C++",
-  "today_stars": "155 stars today",
-  "date": "2026-11-22",
+  "name": "google-labs-code/stitch-skills",
+  "url": "https://github.com/google-labs-code/stitch-skills",
+  "desc": "A library of Agent Skills designed to work with the Stitch MCP server. Each skill follows the Agent Skills open standard, for compatibility with coding agents such as Antigravity, Gemini CLI, Claude Code, Cursor.",
+  "stars": "12,133",
+  "language": "TypeScript",
+  "today_stars": "425 stars today",
+  "date": "2026-11-23",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
