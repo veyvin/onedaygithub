@@ -14,6 +14,8 @@ except ImportError:
     BeautifulSoup = None
     print("警告: 未安装 BeautifulSoup，HTML 解析将退化为正则表达式")
 
+from repo_context import fetch_repo_context
+
 
 # Python 的 re 不支持 \p{Emoji}，用码位区间覆盖常见 emoji
 EMOJI_RE = re.compile(
@@ -325,13 +327,17 @@ class Example:
 - 可以根据项目特点调整重点（比如有些项目适合先讲技术，有些适合先讲场景）
 - 标题要多样，不要总是"项目介绍"、"功能特点"这种固定词汇
 
-请严格按照这个格式返回：
-文章标题（第一行，不要HTML标签）
-<html内容>（从第二行开始）
+请只返回一个 JSON 对象（不要使用 ``` 包裹，不要输出任何解释文字），字段如下：
+{
+  "title": "文章标题，可含 1-2 个 emoji，不要 HTML 标签，不超过 64 字",
+  "summary": "80-120 字纯文本摘要，用于文章列表与公众号导语，不要 HTML",
+  "tags": ["最多 3 个技术标签"],
+  "content": "HTML 正文，从 <p> 开始，不要包含 <html>/<body>/<h1> 标签"
+}
 """
 
 
-def _build_user_prompt(repo_data):
+def _build_user_prompt(repo_data, repo_context=None):
     """每天会变的项目信息 + 本次结构建议，放在 user 消息末尾，不影响 system 前缀缓存。"""
     name = repo_data.get('name')
     url = repo_data.get('url')
@@ -341,6 +347,35 @@ def _build_user_prompt(repo_data):
         desc = ''
     desc_display = desc if desc else '（项目未提供描述）'
     date = repo_data.get('date')
+
+    context = repo_context or {}
+    metadata = context.get('metadata') or {}
+    readme_excerpt = (context.get('readme_excerpt') or '').strip()
+
+    language = repo_data.get('language') or metadata.get('language') or ''
+    stars = repo_data.get('stars') or metadata.get('stars')
+    today_stars = repo_data.get('today_stars')
+    topics = metadata.get('topics') or []
+
+    facts = []
+    if stars not in (None, '', 'N/A'):
+        facts.append(f"- Star 数：{stars}")
+    if language:
+        facts.append(f"- 主要语言：{language}")
+    if today_stars and today_stars != 'N/A':
+        facts.append(f"- 区间新增：{today_stars}")
+    if topics:
+        topics_text = ', '.join(str(t) for t in topics[:10])
+        facts.append(f"- Topics：{topics_text}")
+    facts_block = "\n".join(facts)
+
+    readme_block = ""
+    if readme_excerpt:
+        readme_block = (
+            "\nREADME 摘要（唯一事实来源：以下内容来自仓库 README；"
+            "未出现的信息不要编造，不要引用未提供的性能数据、版本号或对比）：\n"
+            f"{readme_excerpt}\n"
+        )
 
     seed = int(hashlib.md5((name or '').encode()).hexdigest()[:8], 16) % 6
 
@@ -390,7 +425,8 @@ def _build_user_prompt(repo_data):
 - 项目地址：{url}
 - 项目描述：{desc_display}
 - 推荐日期：{date}
-{source_line}
+{source_line}{facts_block}
+{readme_block}
 📝 本次文章结构建议（根据项目特点灵活选择3-6个部分）：
 {selected_structure['intro']}
 
@@ -399,9 +435,9 @@ def _build_user_prompt(repo_data):
 """
 
 
-def _build_prompt(repo_data):
+def _build_prompt(repo_data, repo_context=None):
     """兼容测试与 Cursor SDK：system + user 拼成单条文本。"""
-    return WRITING_SYSTEM_PROMPT + "\n\n" + _build_user_prompt(repo_data)
+    return WRITING_SYSTEM_PROMPT + "\n\n" + _build_user_prompt(repo_data, repo_context)
 
 
 def _log_completion_usage(result):
@@ -432,31 +468,134 @@ def _log_completion_usage(result):
         print("提示: 本次未命中 prompt 缓存。同一 system 前缀在缓存有效期内再次请求才会命中。")
 
 
-def generate_post_with_cursor_sdk(repo_data, provider):
+def _parse_structured_post(raw):
+    """解析模型返回的 JSON 文章；失败返回 None。
+
+    兼容三种常见返回：纯 JSON、```json 围栏、JSON 前后夹带说明文字。
+    """
+    if not raw:
+        return None
+
+    text = raw.strip()
+    fenced = re.match(r"^```(?:json)?\s*(.*?)\s*```$", text, re.DOTALL | re.IGNORECASE)
+    if fenced:
+        text = fenced.group(1).strip()
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end <= start:
+        return None
+
+    try:
+        data = json.loads(text[start:end + 1])
+    except (ValueError, TypeError):
+        return None
+
+    if not isinstance(data, dict):
+        return None
+
+    title = str(data.get("title") or "").strip()
+    content = str(data.get("content") or "").strip()
+    if not title or not content:
+        return None
+
+    summary = str(data.get("summary") or "").strip()
+    tags = []
+    raw_tags = data.get("tags")
+    if isinstance(raw_tags, list):
+        for tag in raw_tags:
+            tag = str(tag).strip()
+            if tag and tag not in tags:
+                tags.append(tag)
+
+    return {"title": title, "summary": summary, "tags": tags[:5], "content": content}
+
+
+def _validate_post(post):
+    """校验生成结果，返回问题列表（空列表表示通过）。"""
+    problems = []
+    title = (post.get("title") or "").strip()
+    content = (post.get("content") or "").strip()
+
+    if len(title) < 5:
+        problems.append("标题过短")
+    if len(title) > 80:
+        problems.append("标题过长（超过 80 字）")
+    if len(content) < 500:
+        problems.append("正文过短（少于 500 字符）")
+
+    lowered = content.lower()
+    if any(tag in lowered for tag in ("<!doctype", "<html", "<body")):
+        problems.append("正文包含完整 HTML 文档结构")
+    if "```" in content:
+        problems.append("正文仍包含 Markdown 代码围栏")
+    if any(placeholder in lowered for placeholder in ("no description", "没有描述")):
+        problems.append("正文包含描述缺失的占位词")
+
+    return problems
+
+
+def _call_chat_completion(provider_name, api_url, headers, model, messages):
+    """调用 Chat Completions，返回 (原始文本, 响应 JSON)；失败返回 (None, None)。"""
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 32000,
+        "stream": False,
+    }
+
+    try:
+        print(f"正在调用 {provider_name} API（system 前缀可缓存）...")
+        response = requests.post(api_url, headers=headers, json=payload, timeout=LLM_TIMEOUT)
+        print(f"API 响应状态码: {response.status_code}")
+
+        if response.status_code != 200:
+            print(f"API 错误: {response.status_code}")
+            print(f"错误详情: {response.text[:500]}")
+            return None, None
+
+        try:
+            result = response.json()
+            raw_content = result['choices'][0]['message']['content']
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            # 代理偶尔会返回 200 + 错误 JSON，这里给出可读报错而不是直接 traceback
+            print(f"API 响应解析失败: {exc}")
+            print(f"响应预览: {response.text[:500]}")
+            return None, None
+
+        return raw_content, result
+
+    except requests.exceptions.RequestException as exc:
+        print(f"网络请求错误: {exc}")
+        return None, None
+
+
+def generate_post_with_cursor_sdk(repo_data, provider, repo_context=None):
     """使用 Cursor Python SDK 生成博客文章（直接调用，无需代理）"""
     api_key = os.getenv(provider['api_key_env'])
     if not api_key:
         print(f"错误: 未找到 {provider['api_key_env']} 环境变量")
         print(f"请在 GitHub Secrets 中设置 {provider['api_key_env']}")
-        return None, None
+        return None, None, None
 
     name = repo_data.get('name')
     url = repo_data.get('url')
     date = repo_data.get('date')
     if not name or not url or not date:
         print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
-        return None, None
+        return None, None, None
 
     model = _resolve_model(provider, 'cursor')
     print(f"模型提供商: cursor | 模型: {model} | API Key 长度: {len(api_key)}")
 
-    prompt = _build_prompt(repo_data)
+    prompt = _build_prompt(repo_data, repo_context)
 
     try:
         from cursor_sdk import Agent, CloudAgentOptions
     except ImportError:
         print("错误: 未安装 cursor-sdk 包，请运行 pip install cursor-sdk")
-        return None, None
+        return None, None, None
 
     try:
         print("正在调用 Cursor SDK...")
@@ -469,36 +608,90 @@ def generate_post_with_cursor_sdk(repo_data, provider):
             run = agent.send(prompt)
             raw_content = run.wait().text()
 
-        # 提取标题和内容
-        title, content = extract_title_and_content(raw_content)
+        post = _parse_structured_post(raw_content)
+        if post is None:
+            print("未能解析结构化 JSON，回退到标题/正文启发式提取")
+            title, content = extract_title_and_content(raw_content)
+            post = {"title": title or f"{name}：项目解析", "summary": "", "tags": [], "content": content}
 
-        if not title:
-            title = f"{name}：项目解析"
+        post["content"] = strip_leading_title(format_code_blocks(post["content"]), post["title"])
 
-        content = format_code_blocks(content)
+        print(f"提取的标题: {post['title']}")
+        print(f"内容预览: {post['content'][:100]}...")
 
-        print(f"提取的标题: {title}")
-        print(f"内容预览: {content[:100]}...")
-
-        return title, content
+        return post["title"], post["content"], {
+            "summary": post.get("summary", ""),
+            "tags": post.get("tags", []),
+        }
     except Exception as e:
         print(f"Cursor SDK 错误: {e}")
         traceback.print_exc()
-        return None, None
+        return None, None, None
 
 
-def generate_post_with_deepseek(repo_data):
+def _generate_post_from_messages(repo_data, provider_name, api_url, headers, model,
+                                 user_prompt, name):
+    """调用模型并校验结果；校验失败时带错误信息重试一次。"""
+    messages = [
+        {"role": "system", "content": WRITING_SYSTEM_PROMPT},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    for attempt in range(2):
+        raw_content, result = _call_chat_completion(
+            provider_name, api_url, headers, model, messages
+        )
+        if raw_content is None:
+            return None, None, None
+
+        _log_completion_usage(result)
+
+        post = _parse_structured_post(raw_content)
+        if post is None:
+            print("未能解析结构化 JSON，回退到标题/正文启发式提取")
+            title, content = extract_title_and_content(raw_content)
+            post = {"title": title or f"{name}：项目解析", "summary": "", "tags": [], "content": content}
+
+        post["content"] = strip_leading_title(format_code_blocks(post["content"]), post["title"])
+
+        problems = _validate_post(post)
+        if problems and attempt == 0:
+            print(f"文章校验未通过，准备重试: {'；'.join(problems)}")
+            messages.append({"role": "assistant", "content": raw_content})
+            messages.append({
+                "role": "user",
+                "content": (
+                    f"上一次输出未通过校验：{'；'.join(problems)}。"
+                    "请重新输出完整 JSON，不要输出任何解释文字。"
+                ),
+            })
+            continue
+
+        if problems:
+            print(f"文章校验未通过（已重试仍失败，继续发布）: {'；'.join(problems)}")
+
+        print(f"提取的标题: {post['title']}")
+        print(f"内容预览: {post['content'][:100]}...")
+        return post["title"], post["content"], {
+            "summary": post.get("summary", ""),
+            "tags": post.get("tags", []),
+        }
+
+    return None, None, None
+
+
+def generate_post_with_deepseek(repo_data, repo_context=None):
     """使用大模型 API 生成博客文章（默认 Sub2API，另支持 DeepSeek、OpenCode Zen、Cursor SDK）"""
 
     provider_name = os.getenv('MODEL_PROVIDER', DEFAULT_PROVIDER)
     provider = PROVIDERS.get(provider_name)
     if not provider:
         print(f"错误: 未知的 MODEL_PROVIDER '{provider_name}'，可选: {list(PROVIDERS.keys())}")
-        return None, None
+        return None, None, None
 
     # Cursor SDK 走单独的代码路径
     if provider.get('use_sdk'):
-        return generate_post_with_cursor_sdk(repo_data, provider)
+        return generate_post_with_cursor_sdk(repo_data, provider, repo_context)
 
     # 从环境变量获取 API 密钥
     api_key = os.getenv(provider['api_key_env'])
@@ -506,7 +699,7 @@ def generate_post_with_deepseek(repo_data):
     if not api_key:
         print(f"错误: 未找到 {provider['api_key_env']} 环境变量")
         print(f"请在 GitHub Secrets 中设置 {provider['api_key_env']}")
-        return None, None
+        return None, None, None
 
     # 仅打印长度用于诊断，避免泄露 API Key 内容
     model = _resolve_model(provider, provider_name)
@@ -518,73 +711,20 @@ def generate_post_with_deepseek(repo_data):
     date = repo_data.get('date')
     if not name or not url or not date:
         print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
-        return None, None
+        return None, None, None
 
     API_URL = os.getenv(provider.get('api_url_env', ''), provider.get('api_url_default', provider.get('api_url', '')))
 
-    user_prompt = _build_user_prompt(repo_data)
+    user_prompt = _build_user_prompt(repo_data, repo_context)
 
     headers = {
         "Content-Type": "application/json",
         provider['auth_header']: f"{provider['auth_prefix']}{api_key}"
     }
 
-    payload = {
-        "model": model,
-        "messages": [
-            {
-                "role": "system",
-                "content": WRITING_SYSTEM_PROMPT,
-            },
-            {
-                "role": "user",
-                "content": user_prompt,
-            },
-        ],
-        "temperature": 0.7,
-        "max_tokens": 32000,
-        "stream": False,
-    }
-
-    try:
-        print(f"正在调用 {provider_name} API（system 前缀可缓存）...")
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=LLM_TIMEOUT)
-        print(f"API 响应状态码: {response.status_code}")
-        
-        if response.status_code == 200:
-            try:
-                result = response.json()
-                raw_content = result['choices'][0]['message']['content']
-            except (ValueError, KeyError, IndexError, TypeError) as e:
-                # 代理偶尔会返回 200 + 错误 JSON，这里给出可读报错而不是直接 traceback
-                print(f"API 响应解析失败: {e}")
-                print(f"响应预览: {response.text[:500]}")
-                return None, None
-
-            _log_completion_usage(result)
-            
-            # 提取标题和内容
-            title, content = extract_title_and_content(raw_content)
-            
-            # 如果提取失败，使用默认标题
-            if not title:
-                title = f"{name}：项目解析"
-            
-            # 格式化代码块 - 将 ``` 转换为 HTML
-            content = format_code_blocks(content)
-            
-            print(f"提取的标题: {title}")
-            print(f"内容预览: {content[:100]}...")
-            
-            return title, content
-        else:
-            print(f"API 错误: {response.status_code}")
-            print(f"错误详情: {response.text}")
-            return None, None
-            
-    except requests.exceptions.RequestException as e:
-        print(f"网络请求错误: {e}")
-        return None, None
+    return _generate_post_from_messages(
+        repo_data, provider_name, API_URL, headers, model, user_prompt, name
+    )
 
 def _derive_tags_from_repo(repo_data: dict) -> list[str]:
     """
@@ -621,23 +761,32 @@ def _derive_tags_from_repo(repo_data: dict) -> list[str]:
     return tags[:3]  # 最多 3 个推导标签
 
 
-def save_generated_post(title, content, repo_data, categories=None, tags=None):
+def save_generated_post(title, content, repo_data, categories=None, tags=None,
+                        summary=None, extra_tags=None):
     """
     保存生成的文章。
     categories: 可选，分类列表，如 ["GitHub Trending", "开源项目"]
     tags: 可选，标签列表。若不传则使用默认 + 从 repo 推导的标签
+    summary: 可选，模型生成的文章摘要（用于 Halo 列表导语）
+    extra_tags: 可选，模型生成的技术标签，会与推导标签合并去重
     """
     # 默认分类
     final_categories = categories or ["GitHub Trending", "开源项目"]
     # 默认标签 + 从仓库推导的标签
     default_tags = ["GitHub", "Trending", "开源项目", "每日推荐", "自动发布", "自动化"]
     derived = _derive_tags_from_repo(repo_data)
-    final_tags = tags if tags is not None else (default_tags + [t for t in derived if t not in default_tags])
+    final_tags = tags if tags is not None else list(default_tags)
+
+    if tags is None:
+        for tag in list(derived) + list(extra_tags or []):
+            if tag and tag not in final_tags:
+                final_tags.append(tag)
 
     post_data = {
         "title": title,
         # 站内标题保留 emoji；这份纯文字标题供公众号/投稿使用
         "title_clean": strip_emoji(title),
+        "summary": (summary or "").strip(),
         "content": content,
         "repo_info": repo_data,
         "categories": final_categories,
@@ -658,15 +807,20 @@ if __name__ == "__main__":
         exit(1)
         
     print(f"处理项目: {repo_data.get('name', 'unknown')}")
+
+    # 抓取仓库元数据与 README，作为文章的事实来源（失败不影响生成）
+    repo_context = fetch_repo_context(repo_data.get('name'))
     
     # 生成文章
-    title, content = generate_post_with_deepseek(repo_data)
+    title, content, meta = generate_post_with_deepseek(repo_data, repo_context)
     
     if title and content:
-        # 去掉正文中与标题重复的首行（标题已在页面上单独展示）
-        content = strip_leading_title(content, title)
         # 保存生成的文章
-        save_generated_post(title, content, repo_data)
+        save_generated_post(
+            title, content, repo_data,
+            summary=(meta or {}).get('summary'),
+            extra_tags=(meta or {}).get('tags'),
+        )
         print("文章生成成功！")
         print(f"标题: {title}")
         print(f"公众号标题（无 emoji）: {strip_emoji(title)}")

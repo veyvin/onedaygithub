@@ -7,6 +7,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 
+import json
 import pytest
 import requests
 from bs4 import BeautifulSoup
@@ -785,4 +786,82 @@ def test_generate_post_handles_invalid_json_response(monkeypatch):
     assert generate_post.generate_post_with_deepseek({
         "name": "a/b", "url": "https://github.com/a/b",
         "desc": "x", "date": "2026-01-01",
-    }) == (None, None)
+    }, {}) == (None, None, None)
+
+
+# ---------------- 结构化输出：解析、校验、重试 ----------------
+
+def test_parse_structured_post_plain_json():
+    raw = json.dumps({
+        "title": "标题标题标题",
+        "summary": "摘要",
+        "tags": ["AI", "CLI", "AI"],
+        "content": "<p>正文</p>",
+    })
+    post = generate_post._parse_structured_post(raw)
+    assert post["title"] == "标题标题标题"
+    assert post["summary"] == "摘要"
+    assert post["tags"] == ["AI", "CLI"]
+    assert post["content"] == "<p>正文</p>"
+
+
+def test_parse_structured_post_handles_fenced_and_prose():
+    fenced = '```json\n{"title": "标题标题标题", "content": "<p>正文</p>"}\n```'
+    assert generate_post._parse_structured_post(fenced)["title"] == "标题标题标题"
+
+    prose = '好的，以下是文章：\n{"title": "标题标题标题", "content": "<p>正文</p>"}\n希望有帮助。'
+    assert generate_post._parse_structured_post(prose)["content"] == "<p>正文</p>"
+
+
+def test_parse_structured_post_rejects_invalid_payload():
+    assert generate_post._parse_structured_post("") is None
+    assert generate_post._parse_structured_post("not json") is None
+    assert generate_post._parse_structured_post('{"title": "x"}') is None
+
+
+def test_validate_post_flags_common_problems():
+    problems = generate_post._validate_post({"title": "短", "content": "<p>hi</p>"})
+    assert any("标题过短" in p for p in problems)
+    assert any("正文过短" in p for p in problems)
+
+    problems = generate_post._validate_post({
+        "title": "一个足够长的标题标题",
+        "content": "<html><body>" + "内容" * 300 + "```</body></html>",
+    })
+    assert any("完整 HTML" in p for p in problems)
+    assert any("代码围栏" in p for p in problems)
+
+
+def test_validate_post_accepts_good_post():
+    post = {"title": "一个足够长的标题标题", "content": "<p>" + "内容" * 300 + "</p>"}
+    assert generate_post._validate_post(post) == []
+
+
+def test_generate_post_retries_once_on_validation_failure(monkeypatch):
+    monkeypatch.setenv("MODEL_PROVIDER", "sub2api")
+    monkeypatch.setenv("SUB2API_API_KEY", "key")
+    calls = []
+
+    def fake_call(provider_name, api_url, headers, model, messages):
+        calls.append(list(messages))
+        if len(calls) == 1:
+            return json.dumps({"title": "T", "content": "<p>short</p>"}), {"usage": {}}
+        return json.dumps({
+            "title": "一个足够长的标题标题",
+            "summary": "摘要内容",
+            "tags": ["AI"],
+            "content": "<p>" + "内容" * 300 + "</p>",
+        }), {"usage": {}}
+
+    monkeypatch.setattr(generate_post, "_call_chat_completion", fake_call)
+    title, content, meta = generate_post.generate_post_with_deepseek({
+        "name": "a/b", "url": "https://github.com/a/b",
+        "desc": "x", "date": "2026-01-01",
+    }, {})
+
+    assert len(calls) == 2
+    assert title == "一个足够长的标题标题"
+    assert meta["summary"] == "摘要内容"
+    assert meta["tags"] == ["AI"]
+    # 第二次请求应带有纠错提示
+    assert any("上一次输出未通过校验" in m.get("content", "") for m in calls[1])

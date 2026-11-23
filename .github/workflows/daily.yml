@@ -161,6 +161,8 @@ jobs:
           SUB2API_API_KEY: ${{ secrets.SUB2API_API_KEY }}
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
+          # 用于抓取仓库 README/元数据（未配置也能跑，只是限额更低）
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'sub2api' }}
           # 手动 Run workflow 填写的模型名：对所有提供商生效
           MODEL_NAME: ${{ github.event.inputs.model || '' }}

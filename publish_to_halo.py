@@ -452,6 +452,10 @@ def publish_to_halo(post_data):
     print(f"  分类: {category_names} -> {cat_ids}")
     print(f"  标签: {tag_names[:5]}{'...' if len(tag_names) > 5 else ''} -> {tag_ids[:5]}{'...' if len(tag_ids) > 5 else ''}")
 
+    # 摘要优先用模型生成的 summary，没有则退回仓库描述
+    summary = (post_data.get("summary") or "").strip()
+    excerpt_raw = summary or (repo_info.get("desc") or "")
+
     payload = {
         "post": {
             "spec": {
@@ -469,7 +473,7 @@ def publish_to_halo(post_data):
                 "priority": 0,
                 "excerpt": {
                     "autoGenerate": False,
-                    "raw": (repo_info.get("desc") or "")[:150]
+                    "raw": excerpt_raw[:150]
                 },
                 "categories": cat_ids,
                 "tags": tag_ids,

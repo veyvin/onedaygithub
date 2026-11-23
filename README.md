@@ -116,6 +116,25 @@ flowchart LR
 
 ## 核心实现说明
 
+### 文章事实来源（README + 仓库元数据）
+`generate_post.py` 生成文章前会通过 `repo_context.py` 抓取：
+
+- **仓库元数据**：默认分支、topics、主要语言、star 数；
+- **README 原文**：清洗徽章、图片、HTML 后，按章节优先级（Features / Install / Usage / Architecture / Configuration）挑选，默认最多注入 6000 字符，可通过环境变量 `README_MAX_CHARS` 调整。
+
+这些真实信息会写入 user 提示词，并要求模型「以 README 为唯一事实来源」，避免只围绕一句项目描述扩写。`GITHUB_TOKEN` 由 Actions 自动注入以提高 GitHub API 限额；抓取失败不会影响文章生成。
+
+### 结构化输出与质量校验
+模型被要求返回 JSON：
+
+```json
+{"title": "...", "summary": "...", "tags": ["..."], "content": "<p>...</p>"}
+```
+
+- 解析失败时回退到旧的「第一行标题 + HTML 正文」启发式提取；
+- 校验不通过（正文过短、包含完整 HTML 文档结构、残留代码围栏、出现描述缺失占位词）会带错误信息重试一次；
+- `summary` 作为 Halo 文章摘要（没有时退回仓库描述），`tags` 与技术关键词标签合并去重。
+
 ### 多样化文章模板
 为避免每天的推荐文章「千人一面」，`generate_post.py` 会基于项目名生成一个稳定 hash，并从 6 种预设结构中随机挑选一种作为文章骨架，再交给 `deepseek-v4.1-flash` 自由发挥。不同项目（框架 / CLI / 前端 UI / 后端基础设施）会得到风格迥异的文章。
 
