@@ -60,9 +60,12 @@ onedaygithub/
 
 | 名称 | 说明 |
 | --- | --- |
-| `MODEL_NAME` | 覆盖默认模型名。不填则用提供商默认（Sub2API 为 `deepseek-v4.1-flash`）。定时任务会读这项；手动 Run workflow 时输入框优先。 |
+| `MODEL_NAME` | 默认提供的模型名（仓库变量，推荐）。只作用于默认提供商 `sub2api`，默认 `deepseek-v4.1-flash`；切换到其他提供商时不会串用。 |
+| `LLM_TIMEOUT` | 单次大模型请求超时秒数，默认 `180`。文章较长时可适当调大。 |
 
-> 💡 默认模型为 `deepseek-v4.1-flash`；如需覆盖，设置仓库变量/Secret `MODEL_NAME`，或手动运行工作流时填写「模型名称」。提供商用 `MODEL_PROVIDER`。
+> 💡 手动 Run workflow 时填写的「模型名称」对所有提供商生效；仓库变量 `MODEL_NAME` 只作用于默认提供商。
+> 💡 模型名不是敏感信息，放在 Variables 里日志才能正常显示；放 Secrets 会在日志中变成 `***`，不利于排障（旧版放在 Secrets 里的 `MODEL_NAME` 已不再读取）。
+> 💡 提供商用 `MODEL_PROVIDER`；默认 `sub2api`。
 > 💡 使用其他提供商时再补充对应 Key：`DEEPSEEK_API_KEY` / `OPENCODE_ZEN_API_KEY` / `CURSOR_API_KEY` / `COMMANDCODE_API_KEY`。
 
 > 💡 默认的 Halo 站点地址为 `https://veyvin.com`，可通过环境变量 `HALO_URL` 覆盖（无需改代码）。
@@ -214,7 +217,7 @@ A: 这是 Cloudflare 人机校验拦截，不是 Halo 的问题，也和 slug/to
 `/apis/*` 建一条 `Allow` 规则。
 
 **Q: 想换大模型怎么办？**
-A: 在仓库 **Settings → Secrets and variables → Actions → Variables** 新增 `MODEL_NAME`（模型名不是敏感信息，建议用 Variable 而不是 Secret）。定时任务会读取它。手动 Run workflow 时，「模型名称」输入框会覆盖这项。提供商用 `MODEL_PROVIDER`（`sub2api`/`deepseek`/`opencode-zen`/`cursor`/`commandcode`）。也可以直接修改 `generate_post.py` 里的 `PROVIDERS` 配置。
+A: 在仓库 **Settings → Secrets and variables → Actions → Variables** 新增 `MODEL_NAME`（模型名不是敏感信息，建议用 Variable 而不是 Secret）。它只作用于默认提供商 `sub2api`。手动 Run workflow 时，「模型名称」输入框会覆盖所有提供商。提供商用 `MODEL_PROVIDER`（`sub2api`/`deepseek`/`opencode-zen`/`cursor`/`commandcode`）。也可以直接修改 `generate_post.py` 里的 `PROVIDERS` 配置。
 
 **Q: 如何修改发布频率？**
 A: 编辑 `.github/workflows/daily.yml` 的 `cron` 字段即可。注意 GitHub Actions 定时为 UTC 时区。

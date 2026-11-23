@@ -32,6 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # 避免定时任务与手动触发重叠：两个 run 同时发布/推送会导致其中一个 push 失败
+    concurrency:
+      group: daily-trending
+      cancel-in-progress: false
 
     steps:
       - name: Checkout Repo
@@ -158,8 +162,11 @@ jobs:
           SUB2API_API_URL: ${{ secrets.SUB2API_API_URL }}
           COMMANDCODE_API_KEY: ${{ secrets.COMMANDCODE_API_KEY }}
           MODEL_PROVIDER: ${{ github.event.inputs.provider || 'sub2api' }}
-          # 手动 Run workflow 的模型名优先；否则读仓库 Variables / Secrets 里的 MODEL_NAME
-          MODEL_NAME: ${{ github.event.inputs.model || vars.MODEL_NAME || secrets.MODEL_NAME || '' }}
+          # 手动 Run workflow 填写的模型名：对所有提供商生效
+          MODEL_NAME: ${{ github.event.inputs.model || '' }}
+          # 默认提供商的专属模型名：只对 sub2api 生效，避免切换提供商时串用模型。
+          # 只用仓库 Variables：模型名不是敏感信息，放 Secrets 会让日志里的模型名变成 ***。
+          DEFAULT_MODEL_NAME: ${{ vars.MODEL_NAME || '' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-sub2api}) ==="
           python generate_post.py
@@ -187,8 +194,9 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          # 只添加本次运行产生的已知文件，避免误提交 .env 等敏感文件
-          git add processed_repos.csv generated_post.json github_daily.json 2>/dev/null || true
+          # 只添加本次运行产生的已知文件，避免误提交 .env 等敏感文件。
+          # 这里不能吞掉 add 失败：否则发布成功后 CSV 没有提交，下次会重复发布同一仓库。
+          git add processed_repos.csv generated_post.json github_daily.json
 
           if git diff --staged --quiet; then
             echo "没有需要提交的更改"

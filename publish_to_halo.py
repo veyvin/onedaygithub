@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+import functools
 import requests
 import time
 from datetime import datetime, timedelta, timezone
@@ -40,6 +41,28 @@ class CloudflareChallengeError(RuntimeError):
 
 class HaloAuthError(RuntimeError):
     """HALO_TOKEN 无效/过期，Halo 将请求重定向到了登录页。"""
+
+
+# Halo / Cloudflare 的瞬时错误：交给 retry_request 重试。
+RETRYABLE_STATUS = {429, 500, 502, 503, 504, 530}
+
+# 判断「同名文章已存在」的错误特征。Halo 中文报错为「名称重复」，
+# 英文环境可能是 Duplicate / AlreadyExists。
+_DUPLICATE_HINTS = (
+    "名称重复",
+    "already exists",
+    "alreadyexist",
+    "duplicate",
+    "conflict",
+)
+
+
+def _is_duplicate_error(response: requests.Response) -> bool:
+    """是否为「文章 metadata.name 已存在」的重复错误。"""
+    if response.status_code not in (400, 409):
+        return False
+    text = (response.text or "").lower()
+    return any(hint.lower() in text for hint in _DUPLICATE_HINTS)
 
 
 def build_headers(token: str) -> dict:
@@ -105,6 +128,13 @@ def halo_request(method: str, url: str, headers: dict, timeout: int = 15, **kwar
             "Personal Access Token，并确认其已写入 GitHub Secret HALO_TOKEN。"
         )
 
+    # 5xx/429 属于瞬时故障，抛出让 retry_request 重试；
+    # 否则调用方会把 5xx 当成「列表为空」继续执行，导致误建分类/标签。
+    if response.status_code in RETRYABLE_STATUS:
+        raise requests.exceptions.RequestException(
+            f"Halo 暂时不可用：{method} {url} 返回 {response.status_code} - {_brief(response)}"
+        )
+
     return response
 
 
@@ -115,6 +145,7 @@ def retry_request(max_retries=3, delay=2):
     属于配置问题，重试无益，直接向上抛出。
     """
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             retries = 0
             while retries < max_retries:
@@ -210,26 +241,36 @@ def create_tag(halo_url: str, headers: dict, display_name: str, slug: str) -> st
     return data.get("metadata", {}).get("name")
 
 
+def _find_item_name(items: list, display_name: str, slug: str) -> str | None:
+    """在 Halo 分类/标签列表中按 displayName 或 slug 查找 metadata.name。"""
+    for item in items:
+        spec = item.get("spec", {})
+        if spec.get("displayName") == display_name or spec.get("slug") == slug:
+            return item.get("metadata", {}).get("name")
+    return None
+
+
 def ensure_category(halo_url: str, headers: dict, display_name: str) -> str | None:
     """确保分类存在，返回 metadata.name。不存在则创建"""
     slug = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", display_name.lower())
     slug = re.sub(r"-+", "-", slug).strip("-") or "default"
     cats = list_categories(halo_url, headers)
-    
-    # 详细检查分类是否存在
-    for c in cats:
-        s = c.get("spec", {})
-        if s.get("displayName") == display_name:
-            return c.get("metadata", {}).get("name")
-        if s.get("slug") == slug:
-            return c.get("metadata", {}).get("name")
-    
+
+    existing = _find_item_name(cats, display_name, slug)
+    if existing:
+        return existing
+
     # 分类不存在，创建新分类
     created = create_category(halo_url, headers, display_name, slug)
     if created:
         return created
-    
-    # 创建失败，返回第一个分类作为 fallback
+
+    # 创建失败可能因为并发创建 / 重试导致已存在：重新拉一次再匹配
+    existing = _find_item_name(list_categories(halo_url, headers), display_name, slug)
+    if existing:
+        return existing
+
+    # 仍然失败，返回第一个分类作为 fallback
     if cats:
         return cats[0].get("metadata", {}).get("name")
     return None
@@ -240,21 +281,22 @@ def ensure_tag(halo_url: str, headers: dict, display_name: str) -> str | None:
     slug = re.sub(r"[^a-z0-9\-_\u4e00-\u9fa5]", "-", display_name.lower())
     slug = re.sub(r"-+", "-", slug).strip("-") or "default"
     tags_list = list_tags(halo_url, headers)
-    
-    # 详细检查标签是否存在
-    for t in tags_list:
-        s = t.get("spec", {})
-        if s.get("displayName") == display_name:
-            return t.get("metadata", {}).get("name")
-        if s.get("slug") == slug:
-            return t.get("metadata", {}).get("name")
-    
+
+    existing = _find_item_name(tags_list, display_name, slug)
+    if existing:
+        return existing
+
     # 标签不存在，创建新标签
     created = create_tag(halo_url, headers, display_name, slug)
     if created:
         return created
-    
-    # 创建失败，返回第一个标签作为 fallback
+
+    # 创建失败可能因为并发创建 / 重试导致已存在：重新拉一次再匹配
+    existing = _find_item_name(list_tags(halo_url, headers), display_name, slug)
+    if existing:
+        return existing
+
+    # 仍然失败，返回第一个标签作为 fallback
     if tags_list:
         return tags_list[0].get("metadata", {}).get("name")
     return None
@@ -466,25 +508,18 @@ def publish_to_halo(post_data):
             print(f"🏷️ 文章标签: {tag_names}")
             print(f"📂 项目名称: {repo_info['name']}")
             return response.json()
-        elif response.status_code == 530:
-            # Cloudflare 530 错误，通常是临时网络问题
-            print(f"🌐 Cloudflare 530 错误: {_brief(response)}")
-            print("💡 提示: 这通常是临时的网络连接问题，重试可能会解决")
-            raise requests.exceptions.RequestException("Cloudflare 530 Tunnel error")
+        elif _is_duplicate_error(response):
+            # 发布成功但后续步骤（如 git push）失败时会重跑；
+            # 同名 slug 已存在说明这篇已经发过，按成功处理，避免流程永久卡死。
+            print("ℹ️ 同名文章已存在，视为已发布（幂等跳过创建）")
+            print(f"🔗 已存在的 slug: {slug}")
+            return {"metadata": {"name": slug}, "duplicate": True}
         else:
             print(f"❌ 发布失败: {response.status_code}")
             print(f"📋 错误详情: {_brief(response, 400)}")
-            
-            # 如果是重复错误，提供更详细的解决方案
-            if response.status_code == 400 and "名称重复" in response.text:
-                print("\n💡 解决方案:")
-                print("   虽然使用了唯一 slug，但仍然出现重复，可能是极端情况")
-                print("   建议检查 Halo 后台是否已存在相同标题或 slug 的文章")
-                print(f"   当前 slug: {slug}")
-            elif response.status_code in (401, 403):
+            if response.status_code in (401, 403):
                 print("\n💡 解决方案:")
                 print("   请确认 HALO_TOKEN 仍然有效，且具备文章管理权限")
-            
             return None
             
     except requests.exceptions.RequestException as e:
@@ -539,14 +574,18 @@ def main():
         return 1
     
     print(f"开始发布文章到 Halo...")
-    print(f"项目: {post_data['repo_info']['name']}")
-    print(f"标题: {post_data['title']}")
+    repo_info = post_data.get("repo_info") or {}
+    print(f"项目: {repo_info.get('name', '未知')}")
+    print(f"标题: {post_data.get('title', '')}")
     
     # 发布到 Halo
     try:
         result = publish_to_halo(post_data)
     except (CloudflareChallengeError, HaloAuthError) as e:
         print(f"\n❌ 发布失败: {e}")
+        return 1
+    except requests.exceptions.RequestException as e:
+        print(f"\n❌ 网络请求失败（已重试）: {e}")
         return 1
     
     if result:

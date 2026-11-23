@@ -2,6 +2,7 @@ import json
 import requests
 import os
 import hashlib
+import html
 import re
 import traceback
 from datetime import datetime
@@ -102,17 +103,39 @@ def read_repo_data():
         return None
 
 def format_code_blocks(content):
-    """将代码块转换为 HTML 格式"""
-    # 处理 ```language\ncode\n``` 格式的代码块
+    """将代码块转换为 HTML 格式。
+
+    - 代码内容做 HTML 转义，避免 HTML/JSX 示例被浏览器当成真实标签渲染；
+    - 先占位围栏代码块，再处理行内代码，避免代码里的反引号被二次替换成嵌套 <code>。
+    """
+    if not content:
+        return content
+
+    blocks = []
+
+    def _stash_block(match):
+        lang = match.group(1) or ""
+        # quote=False：只转义 & < >，保留代码里的引号原样
+        code = html.escape(match.group(2), quote=False)
+        blocks.append(f'<pre><code class="language-{lang}">{code}</code></pre>')
+        return f"\x00CODEBLOCK{len(blocks) - 1}\x00"
+
     content = re.sub(
         r'```(\w+)?\s*\n(.*?)\n```',
-        lambda m: f'<pre><code class="language-{m.group(1) or ""}">{m.group(2)}</code></pre>',
+        _stash_block,
         content,
         flags=re.DOTALL
     )
 
-    # 处理行内代码 `code`
-    content = re.sub(r'`([^`]+)`', r'<code>\1</code>', content)
+    # 行内代码：同样转义，防止 `<T>` 之类被解析成标签
+    content = re.sub(
+        r'`([^`\n]+)`',
+        lambda m: f'<code>{html.escape(m.group(1), quote=False)}</code>',
+        content
+    )
+
+    for i, block in enumerate(blocks):
+        content = content.replace(f"\x00CODEBLOCK{i}\x00", block)
 
     return content
 
@@ -134,9 +157,9 @@ def extract_title_and_content(full_content):
                 title_tag = soup.find('title')
                 title = title_tag.get_text().strip() if title_tag else ""
 
-            # 提取正文 - 找 body 或者直接取所有内容
+            # 提取正文 - 只要 body 内部内容，避免把 <body> 标签嵌进 Halo 文章正文
             body_tag = soup.find('body')
-            content = str(body_tag) if body_tag else full_content
+            content = body_tag.decode_contents() if body_tag else full_content
 
             return title, content
         else:
@@ -174,6 +197,13 @@ def extract_title_and_content(full_content):
         content = full_content
 
     return title, content
+
+# 默认模型提供商。DEFAULT_MODEL_NAME 只对这个提供商生效，避免切换提供商时串用模型。
+DEFAULT_PROVIDER = "sub2api"
+
+# 单次 LLM 请求超时（秒）。非流式请求要等整篇文章生成完，
+# 实测约 45 秒，60 秒余量太小，容易被读超时打断。
+LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "180"))
 
 # 模型提供商配置
 PROVIDERS = {
@@ -214,10 +244,23 @@ PROVIDERS = {
 }
 
 
-def _resolve_model(provider):
-    """解析实际使用的模型名：优先使用 MODEL_NAME 环境变量，否则用 provider 默认值。"""
-    override = os.getenv('MODEL_NAME', '').strip()
-    return override or provider.get('model')
+def _resolve_model(provider, provider_name=None):
+    """解析实际使用的模型名。
+
+    优先级：
+    1. MODEL_NAME：显式指定，对所有提供商生效（手动 Run workflow 时填写）；
+    2. DEFAULT_MODEL_NAME：只对默认提供商生效（来自仓库 Variables/Secrets），
+       避免切换到 deepseek 等提供商时继续发送 sub2api 的模型名；
+    3. provider 自带的默认模型。
+    """
+    explicit = os.getenv('MODEL_NAME', '').strip()
+    if explicit:
+        return explicit
+    if provider_name == DEFAULT_PROVIDER:
+        default_override = os.getenv('DEFAULT_MODEL_NAME', '').strip()
+        if default_override:
+            return default_override
+    return provider.get('model')
 
 
 # 固定写作规则单独放 system：每天项目信息不同，若写在 prompt 开头会导致前缀缓存永远 miss。
@@ -404,7 +447,7 @@ def generate_post_with_cursor_sdk(repo_data, provider):
         print(f"错误: repo_data 缺少必需字段 (name/url/date): {repo_data}")
         return None, None
 
-    model = _resolve_model(provider)
+    model = _resolve_model(provider, 'cursor')
     print(f"模型提供商: cursor | 模型: {model} | API Key 长度: {len(api_key)}")
 
     prompt = _build_prompt(repo_data)
@@ -447,7 +490,7 @@ def generate_post_with_cursor_sdk(repo_data, provider):
 def generate_post_with_deepseek(repo_data):
     """使用大模型 API 生成博客文章（默认 Sub2API，另支持 DeepSeek、OpenCode Zen、Cursor SDK）"""
 
-    provider_name = os.getenv('MODEL_PROVIDER', 'sub2api')
+    provider_name = os.getenv('MODEL_PROVIDER', DEFAULT_PROVIDER)
     provider = PROVIDERS.get(provider_name)
     if not provider:
         print(f"错误: 未知的 MODEL_PROVIDER '{provider_name}'，可选: {list(PROVIDERS.keys())}")
@@ -466,7 +509,7 @@ def generate_post_with_deepseek(repo_data):
         return None, None
 
     # 仅打印长度用于诊断，避免泄露 API Key 内容
-    model = _resolve_model(provider)
+    model = _resolve_model(provider, provider_name)
     print(f"模型提供商: {provider_name} | 模型: {model} | API Key 长度: {len(api_key)}")
 
     # 验证仓库必需字段，避免 KeyError 导致整段失败
@@ -505,13 +548,20 @@ def generate_post_with_deepseek(repo_data):
 
     try:
         print(f"正在调用 {provider_name} API（system 前缀可缓存）...")
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=LLM_TIMEOUT)
         print(f"API 响应状态码: {response.status_code}")
         
         if response.status_code == 200:
-            result = response.json()
+            try:
+                result = response.json()
+                raw_content = result['choices'][0]['message']['content']
+            except (ValueError, KeyError, IndexError, TypeError) as e:
+                # 代理偶尔会返回 200 + 错误 JSON，这里给出可读报错而不是直接 traceback
+                print(f"API 响应解析失败: {e}")
+                print(f"响应预览: {response.text[:500]}")
+                return None, None
+
             _log_completion_usage(result)
-            raw_content = result['choices'][0]['message']['content']
             
             # 提取标题和内容
             title, content = extract_title_and_content(raw_content)
@@ -539,16 +589,35 @@ def generate_post_with_deepseek(repo_data):
 def _derive_tags_from_repo(repo_data: dict) -> list[str]:
     """
     根据仓库信息推导额外标签（可选）。
-    可从项目名、描述中提取技术关键词，用于丰富标签。
+
+    使用词元/词边界匹配，避免子串误判：
+    - django 不应命中 go
+    - daily 不应命中 ai
+    - javascript 不应同时命中 java
     """
-    tags = []
     name = (repo_data.get("name") or "").lower()
     desc = (repo_data.get("desc") or "").lower()
-    # 常见技术关键词
-    keywords = ["python", "rust", "javascript", "typescript", "go", "java", "ai", "llm", "quant", "trading", "cli", "web"]
-    for kw in keywords:
-        if kw in name or kw in desc:
-            tags.append(kw.capitalize())
+    text = f"{name} {desc}".replace("-", " ").replace("_", " ")
+
+    # 标签名 + 词边界正则（按顺序匹配，最多取 3 个）
+    keywords = [
+        ("Python", r"\bpython\b"),
+        ("Rust", r"\brust\b"),
+        ("JavaScript", r"\bjavascript\b"),
+        ("TypeScript", r"\btypescript\b"),
+        ("Go", r"\b(go|golang)\b"),
+        ("Java", r"\bjava\b"),
+        ("AI", r"\b(ai|artificial intelligence)\b"),
+        ("LLM", r"\bllms?\b"),
+        ("Quant", r"\bquant\b"),
+        ("Trading", r"\btrading\b"),
+        ("CLI", r"\bcli\b"),
+        ("Web", r"\bweb\b"),
+    ]
+    tags = []
+    for tag, pattern in keywords:
+        if re.search(pattern, text, re.IGNORECASE):
+            tags.append(tag)
     return tags[:3]  # 最多 3 个推导标签
 
 

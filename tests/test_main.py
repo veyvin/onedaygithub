@@ -8,8 +8,10 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
+import requests
 from bs4 import BeautifulSoup
 
+import generate_post
 import github_daily
 from generate_post import (
     WRITING_SYSTEM_PROMPT,
@@ -20,6 +22,7 @@ from generate_post import (
     strip_emoji,
     strip_leading_title,
     _derive_tags_from_repo,
+    _resolve_model,
 )
 import publish_to_halo
 from publish_to_halo import (
@@ -167,7 +170,16 @@ def test_derive_tags_from_repo_detects_cli():
     # 单独验证 CLI 关键词能被识别
     repo = {"name": "my-tool", "desc": "a useful cli"}
     tags = _derive_tags_from_repo(repo)
-    assert "Cli" in tags
+    assert "CLI" in tags
+
+
+def test_derive_tags_from_repo_avoids_substring_false_positives():
+    # django 不含 go；daily 不含 ai；javascript 不应同时命中 java
+    assert _derive_tags_from_repo({"name": "django-app", "desc": "a web framework"}) == ["Web"]
+    assert "AI" not in _derive_tags_from_repo({"name": "daily-planner", "desc": "x"})
+    tags = _derive_tags_from_repo({"name": "javascript-utils", "desc": ""})
+    assert "JavaScript" in tags
+    assert "Java" not in tags
 
 
 def test_derive_tags_from_repo_no_match_returns_empty():
@@ -194,9 +206,8 @@ def test_to_ascii_slug_basic():
 
 
 def test_to_ascii_slug_preserves_chinese():
-    s = _to_ascii_slug("开源项目")
-    # 中文字符应被保留；若首字符非 ASCII 则补 cat- 前缀
-    assert "开源项目" in s or s.startswith("cat-")
+    # 中文字符应被保留；首字符非 ASCII 时统一补 cat- 前缀
+    assert _to_ascii_slug("开源项目") == "cat-开源项目"
 
 
 def test_to_ascii_slug_empty_falls_back_to_cat_default():
@@ -666,3 +677,112 @@ def test_system_prompt_is_stable_and_excludes_repo_fields():
         "name": "foo/bar", "url": "https://github.com/foo/bar",
         "desc": "unique-desc-xyz", "date": "2026-11-18",
     })
+
+
+# ---------------- 模型名解析：切换提供商不串用模型 ----------------
+
+def test_resolve_model_explicit_override_applies_to_all_providers(monkeypatch):
+    monkeypatch.setenv("MODEL_NAME", "custom-model")
+    monkeypatch.delenv("DEFAULT_MODEL_NAME", raising=False)
+    assert _resolve_model(generate_post.PROVIDERS["deepseek"], "deepseek") == "custom-model"
+
+
+def test_resolve_model_default_override_only_applies_to_default_provider(monkeypatch):
+    monkeypatch.delenv("MODEL_NAME", raising=False)
+    monkeypatch.setenv("DEFAULT_MODEL_NAME", "sub2api-model")
+    sub_provider = generate_post.PROVIDERS["sub2api"]
+    deepseek_provider = generate_post.PROVIDERS["deepseek"]
+    assert _resolve_model(sub_provider, "sub2api") == "sub2api-model"
+    # 切到其他提供商时必须使用它自己的默认模型
+    assert _resolve_model(deepseek_provider, "deepseek") == deepseek_provider["model"]
+
+
+def test_resolve_model_falls_back_to_provider_default(monkeypatch):
+    monkeypatch.delenv("MODEL_NAME", raising=False)
+    monkeypatch.delenv("DEFAULT_MODEL_NAME", raising=False)
+    provider = generate_post.PROVIDERS["sub2api"]
+    assert _resolve_model(provider, "sub2api") == provider["model"]
+
+
+# ---------------- 代码块格式化：转义与嵌套 ----------------
+
+def test_format_code_blocks_escapes_html_inside_fence():
+    out = format_code_blocks('```html\n<div class="x">hi</div>\n```')
+    assert "&lt;div" in out
+    assert "<div" not in out
+
+
+def test_format_code_blocks_does_not_nest_inline_code_inside_fence():
+    out = format_code_blocks("```bash\necho `date`\n```")
+    assert out.count("<code") == 1
+    assert "`date`" in out
+
+
+def test_format_code_blocks_escapes_inline_code():
+    out = format_code_blocks("泛型 `List<T>` 的写法")
+    assert "<code>List&lt;T&gt;</code>" in out
+
+
+# ---------------- 完整 HTML 返回时去掉 body 包裹 ----------------
+
+def test_extract_title_and_content_unwraps_body_tag():
+    html = "<html><body><h1>T</h1><p>正文</p></body></html>"
+    title, content = extract_title_and_content(html)
+    assert title == "T"
+    assert "<body" not in content
+    assert "<p>正文</p>" in content
+
+
+# ---------------- 发布幂等与瞬时错误 ----------------
+
+def test_halo_request_raises_on_retryable_status(monkeypatch):
+    monkeypatch.setattr(
+        publish_to_halo.requests, "request",
+        lambda *a, **kw: _fake_response(503, {}, "service unavailable"),
+    )
+    with pytest.raises(requests.exceptions.RequestException):
+        halo_request("GET", "https://example.com/apis/x", build_headers("pat-x"))
+
+
+def test_publish_treats_duplicate_name_as_success(monkeypatch):
+    monkeypatch.setattr(
+        publish_to_halo, "halo_request",
+        lambda *a, **kw: _fake_response(400, {}, '{"detail": "名称重复"}'),
+    )
+    monkeypatch.setattr(
+        publish_to_halo, "resolve_categories_and_tags",
+        lambda *args, **kwargs: (["cat-id"], ["tag-id"]),
+    )
+    monkeypatch.setenv("HALO_TOKEN", "pat-x")
+
+    post_data = {
+        "repo_info": {"name": "owner/repo", "date": "2026-11-18"},
+        "title": "标题",
+        "content": "<p>正文</p>",
+    }
+    result = publish_post(post_data)
+    assert result is not None
+    assert result.get("duplicate") is True
+
+
+# ---------------- LLM 响应异常处理 ----------------
+
+def test_generate_post_handles_invalid_json_response(monkeypatch):
+    monkeypatch.setenv("MODEL_PROVIDER", "sub2api")
+    monkeypatch.setenv("SUB2API_API_KEY", "key")
+    monkeypatch.delenv("MODEL_NAME", raising=False)
+    monkeypatch.delenv("DEFAULT_MODEL_NAME", raising=False)
+
+    class BadResponse:
+        status_code = 200
+        text = "<html>bad gateway</html>"
+        headers = {}
+
+        def json(self):
+            raise ValueError("bad json")
+
+    monkeypatch.setattr(generate_post.requests, "post", lambda *a, **k: BadResponse())
+    assert generate_post.generate_post_with_deepseek({
+        "name": "a/b", "url": "https://github.com/a/b",
+        "desc": "x", "date": "2026-01-01",
+    }) == (None, None)
