@@ -1,11 +1,11 @@
 {
-  "name": "Tracer-Cloud/opensre",
-  "url": "https://github.com/Tracer-Cloud/opensre",
-  "desc": "The open-source agent for CI/CD reliability.",
-  "stars": "14,680",
-  "language": "Python",
-  "today_stars": "438 stars today",
-  "date": "2026-11-23",
+  "name": "toeverything/AFFiNE",
+  "url": "https://github.com/toeverything/AFFiNE",
+  "desc": "There can be more than Notion and Miro. AFFiNE(pronounced [ə‘fain]) is a next-gen knowledge base that brings planning, sorting and creating all together. Privacy first, open-source, customizable and ready to use.",
+  "stars": "77,440",
+  "language": "TypeScript",
+  "today_stars": "595 stars today",
+  "date": "2026-11-24",
   "source": "global-daily",
   "source_label": "GitHub 全球日榜",
   "period": "daily"
