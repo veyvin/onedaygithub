@@ -1,12 +1,12 @@
 {
-  "name": "zhouxiaoka/autoclip",
-  "url": "https://github.com/zhouxiaoka/autoclip",
-  "desc": "AutoClip｜一个链接，一键出片。开源 AI 视频剪辑桌面工具，将播客、访谈、课程等长视频自动剪成短视频，生成字幕、封面和发布文案，适配抖音、小红书、TikTok、Reels 与 YouTube Shorts。Open-source AI video clipping & content repurposing.",
-  "stars": "15,965",
-  "language": "Python",
-  "today_stars": "868 stars today",
+  "name": "aoaostar/legado",
+  "url": "https://github.com/aoaostar/legado",
+  "desc": "阅读APP书源",
+  "stars": "7,947",
+  "language": "HTML",
+  "today_stars": "44 stars today",
   "date": "2026-11-25",
-  "source": "global-daily",
-  "source_label": "GitHub 全球日榜",
+  "source": "zh-daily",
+  "source_label": "中文区日榜（中国）",
   "period": "daily"
 }
