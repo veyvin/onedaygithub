@@ -171,11 +171,11 @@ jobs:
           DEFAULT_MODEL_NAME: ${{ vars.MODEL_NAME || '' }}
           # 生成参数（均可用仓库 Variables 覆盖）
           LLM_TIMEOUT: ${{ vars.LLM_TIMEOUT || '180' }}
-          LLM_MAX_TOKENS: ${{ vars.LLM_MAX_TOKENS || '12000' }}
+          LLM_MAX_TOKENS: ${{ vars.LLM_MAX_TOKENS || '10000' }}
           LLM_MAX_ATTEMPTS: ${{ vars.LLM_MAX_ATTEMPTS || '3' }}
           LLM_RETRY_DELAY: ${{ vars.LLM_RETRY_DELAY || '15' }}
-          ARTICLE_MIN_CHARS: ${{ vars.ARTICLE_MIN_CHARS || '1800' }}
-          ARTICLE_MAX_CHARS: ${{ vars.ARTICLE_MAX_CHARS || '2600' }}
+          ARTICLE_MIN_CHARS: ${{ vars.ARTICLE_MIN_CHARS || '1600' }}
+          ARTICLE_MAX_CHARS: ${{ vars.ARTICLE_MAX_CHARS || '2800' }}
           README_MAX_CHARS: ${{ vars.README_MAX_CHARS || '4500' }}
         run: |
           echo "=== 生成博客文章 (提供商: ${MODEL_PROVIDER:-sub2api}) ==="

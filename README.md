@@ -62,9 +62,9 @@ onedaygithub/
 | --- | --- |
 | `MODEL_NAME` | 默认提供的模型名（仓库变量，推荐）。只作用于默认提供商 `sub2api`，默认 `deepseek-v4.1-flash`；切换到其他提供商时不会串用。 |
 | `LLM_TIMEOUT` | 单次大模型请求超时秒数，默认 `180`。 |
-| `LLM_MAX_TOKENS` | 单次输出 token 上限，默认 `12000`。 |
+| `LLM_MAX_TOKENS` | 单次输出 token 上限，默认 `10000`。 |
 | `LLM_MAX_ATTEMPTS` / `LLM_RETRY_DELAY` | 429/5xx 重试次数与退避基数（秒），默认 `3` / `15`。 |
-| `ARTICLE_MIN_CHARS` / `ARTICLE_MAX_CHARS` | 正文纯文字长度区间（不含 HTML 与代码块），默认 `1800` / `2600`。 |
+| `ARTICLE_MIN_CHARS` / `ARTICLE_MAX_CHARS` | 正文纯文字长度区间（不含 HTML 与代码块），默认 `1600` / `2800`。 |
 | `README_MAX_CHARS` | 注入提示词的 README 最大字符数，默认 `4500`。 |
 
 > 💡 手动 Run workflow 时填写的「模型名称」对所有提供商生效；仓库变量 `MODEL_NAME` 只作用于默认提供商。
@@ -140,11 +140,12 @@ flowchart LR
 - `summary` 作为 Halo 文章摘要（没有时退回仓库描述），`tags` 与技术关键词标签合并去重。
 
 ### 文章长度
-目标：**正文纯文字 1800-2500 字（不含 HTML 标签与代码块），分 4-6 个小节，每节 350-500 字**。
+目标：**正文纯文字 1600-2200 字（不含 HTML 标签与代码块），分 4-6 个小节，每节 300-450 字**。
 
 `_validate_post()` 用 BeautifulSoup 去掉标签、`<pre>/<code>` 代码块和空白后统计纯文字字数：
 
-- 低于 `ARTICLE_MIN_CHARS`（默认 1800）或高于 `ARTICLE_MAX_CHARS`（默认 2600）会带错误信息重试一次；
+- 低于 `ARTICLE_MIN_CHARS`（默认 1600）或高于 `ARTICLE_MAX_CHARS`（默认 2800）会带错误信息重试一次；
+- 上限留了容差：模型轻微超出目标字数时不会触发无意义的重试；
 - 重试后仍不达标则记录警告并继续发布，避免当天空窗。
 
 ### 多样化文章模板

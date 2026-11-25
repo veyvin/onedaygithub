@@ -840,7 +840,7 @@ def test_validate_post_accepts_good_post():
 def test_validate_post_flags_too_long_post():
     post = {"title": "一个足够长的标题标题", "content": "<p>" + "内容" * 2600 + "</p>"}
     problems = generate_post._validate_post(post)
-    assert any("超过 2600 字" in p for p in problems)
+    assert any("超过 2800 字" in p for p in problems)
 
 
 def test_plain_text_length_excludes_tags_and_code_blocks():
