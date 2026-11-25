@@ -61,11 +61,11 @@ onedaygithub/
 | 名称 | 说明 |
 | --- | --- |
 | `MODEL_NAME` | 默认提供的模型名（仓库变量，推荐）。只作用于默认提供商 `sub2api`，默认 `deepseek-v4.1-flash`；切换到其他提供商时不会串用。 |
-| `LLM_TIMEOUT` | 单次大模型请求超时秒数，默认 `240`。 |
-| `LLM_MAX_TOKENS` | 单次输出 token 上限，默认 `20000`。 |
+| `LLM_TIMEOUT` | 单次大模型请求超时秒数，默认 `180`。 |
+| `LLM_MAX_TOKENS` | 单次输出 token 上限，默认 `12000`。 |
 | `LLM_MAX_ATTEMPTS` / `LLM_RETRY_DELAY` | 429/5xx 重试次数与退避基数（秒），默认 `3` / `15`。 |
-| `ARTICLE_MIN_CHARS` / `ARTICLE_MAX_CHARS` | 正文纯文字长度区间（不含 HTML 与代码块），默认 `2500` / `5000`。 |
-| `README_MAX_CHARS` | 注入提示词的 README 最大字符数，默认 `6000`。 |
+| `ARTICLE_MIN_CHARS` / `ARTICLE_MAX_CHARS` | 正文纯文字长度区间（不含 HTML 与代码块），默认 `1800` / `2600`。 |
+| `README_MAX_CHARS` | 注入提示词的 README 最大字符数，默认 `4500`。 |
 
 > 💡 手动 Run workflow 时填写的「模型名称」对所有提供商生效；仓库变量 `MODEL_NAME` 只作用于默认提供商。
 > 💡 模型名不是敏感信息，放在 Variables 里日志才能正常显示；放 Secrets 会在日志中变成 `***`，不利于排障（旧版放在 Secrets 里的 `MODEL_NAME` 已不再读取）。
@@ -124,7 +124,7 @@ flowchart LR
 `generate_post.py` 生成文章前会通过 `repo_context.py` 抓取：
 
 - **仓库元数据**：默认分支、topics、主要语言、star 数；
-- **README 原文**：清洗徽章、图片、HTML 后，按章节优先级（Features / Install / Usage / Architecture / Configuration）挑选，默认最多注入 6000 字符，可通过环境变量 `README_MAX_CHARS` 调整。
+- **README 原文**：清洗徽章、图片、HTML 后，按章节优先级（Features / Install / Usage / Architecture / Configuration）挑选，默认最多注入 4500 字符，可通过环境变量 `README_MAX_CHARS` 调整。
 
 这些真实信息会写入 user 提示词，并要求模型「以 README 为唯一事实来源」，避免只围绕一句项目描述扩写。`GITHUB_TOKEN` 由 Actions 自动注入以提高 GitHub API 限额；抓取失败不会影响文章生成。
 
@@ -140,11 +140,11 @@ flowchart LR
 - `summary` 作为 Halo 文章摘要（没有时退回仓库描述），`tags` 与技术关键词标签合并去重。
 
 ### 文章长度
-目标：**正文纯文字 2500-5000 字（不含 HTML 标签与代码块），分 5-8 个小节，每节 500-800 字**。
+目标：**正文纯文字 1800-2500 字（不含 HTML 标签与代码块），分 4-6 个小节，每节 350-500 字**。
 
 `_validate_post()` 用 BeautifulSoup 去掉标签、`<pre>/<code>` 代码块和空白后统计纯文字字数：
 
-- 低于 `ARTICLE_MIN_CHARS`（默认 2500）或高于 `ARTICLE_MAX_CHARS`（默认 5000）会带错误信息重试一次；
+- 低于 `ARTICLE_MIN_CHARS`（默认 1800）或高于 `ARTICLE_MAX_CHARS`（默认 2600）会带错误信息重试一次；
 - 重试后仍不达标则记录警告并继续发布，避免当天空窗。
 
 ### 多样化文章模板

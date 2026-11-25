@@ -204,15 +204,15 @@ def extract_title_and_content(full_content):
 # 默认模型提供商。DEFAULT_MODEL_NAME 只对这个提供商生效，避免切换提供商时串用模型。
 DEFAULT_PROVIDER = "sub2api"
 
-# 单次 LLM 请求超时（秒）。目标 2500-5000 字，生成时间比短文更长，留足余量。
-LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "240"))
+# 单次 LLM 请求超时（秒）。1800-2500 字文章通常几十秒即可完成。
+LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "180"))
 
-# 单次输出 token 上限：2500-5000 字中文 + HTML 标记约 7k-10k tokens，留足余量。
-MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "20000"))
+# 单次输出 token 上限：1800-2500 字中文 + HTML 标记约 4k-7k tokens，12000 留足余量。
+MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "12000"))
 
 # 正文纯文字长度要求（不含 HTML 标签与代码块）
-MIN_ARTICLE_CHARS = int(os.getenv("ARTICLE_MIN_CHARS", "2500"))
-MAX_ARTICLE_CHARS = int(os.getenv("ARTICLE_MAX_CHARS", "5000"))
+MIN_ARTICLE_CHARS = int(os.getenv("ARTICLE_MIN_CHARS", "1800"))
+MAX_ARTICLE_CHARS = int(os.getenv("ARTICLE_MAX_CHARS", "2600"))
 
 # 大模型请求遇到这些状态时重试（网关抖动、限流等）
 LLM_RETRYABLE_STATUS = {408, 409, 425, 429, 500, 502, 503, 504, 520, 522, 524, 530}
@@ -293,7 +293,7 @@ WRITING_SYSTEM_PROMPT = """你是技术博客作者。请为用户给出的开�
 ✨ 写作要求：
 1. 文章标题请直接写在第一行，不要包含任何 HTML 标签。标题要吸引人，包含项目名称和1-2个相关的有趣图标（如 🤖 🚀 🛠️ ⚡ 🎨 🔥 💡 📦 🌟 等）来标识这是自动生成的文章
 2. 正文内容从第二行开始，使用 HTML 格式
-3. 正文纯文字 2500-5000 字（不含 HTML 标签与代码块），分 5-8 个小节，每节 500-800 字，要有实质内容，不要空泛
+3. 正文纯文字 1800-2500 字（不含 HTML 标签与代码块），分 4-6 个小节，每节 350-500 字，要有实质内容，不要空泛
 4. 正文中使用适当的 HTML 标签：<p>, <h2>, <h3>, <ul>, <li>, <code>, <strong>, <em>, <blockquote> 等
 5. 所有标题标签必须包含 id 属性，例如：<h2 id="project-introduction">项目介绍</h2>
 6. 不要返回完整的 HTML 文档结构（不要有 <!DOCTYPE>, <html>, <head>, <body> 标签）
@@ -439,10 +439,10 @@ def _build_user_prompt(repo_data, repo_context=None):
 - 推荐日期：{date}
 {source_line}{facts_block}
 {readme_block}
-📝 本次文章结构建议（根据项目特点灵活选择 5-8 个部分，每节 500-800 字）：
+📝 本次文章结构建议（根据项目特点灵活选择 4-6 个部分，每节 350-500 字）：
 {selected_structure['intro']}
 
-建议包含以下部分（但不要全部都用，根据项目特点选择 5-8 个即可）：
+建议包含以下部分（但不要全部都用，根据项目特点选择 4-6 个即可）：
 {chr(10).join(['- ' + s for s in selected_structure['structure']])}
 """
 

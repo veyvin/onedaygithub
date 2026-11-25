@@ -15,7 +15,7 @@ GITHUB_API = "https://api.github.com"
 REQUEST_TIMEOUT = 15
 
 # README 注入提示词的最大字符数（4000-6000 之间比较合适）
-MAX_README_CHARS = int(os.getenv("README_MAX_CHARS", "6000"))
+MAX_README_CHARS = int(os.getenv("README_MAX_CHARS", "4500"))
 
 # 章节权重：数字越大越优先保留
 SECTION_KEYWORDS = [
